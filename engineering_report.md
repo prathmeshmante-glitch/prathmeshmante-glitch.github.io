@@ -55,11 +55,11 @@ Live discovery through GitHub's API verified the following repositories for oper
 ## 4. Test Execution & Outcomes
 
 ### A. Backend Unit & Integration Tests (`backend/tests/test_api.py`)
-- **Status:** `14 PASSED, 0 FAILED in 12.69s` (100% passing)
-- Verified: Health endpoints, system diagnostics, GitHub repository caching, identity pronunciation (never spells V-E-R-A), operator respect protocol (`Boss`), wake-phrase acknowledgement (`Yes, Boss?` vs `Yes? I'm listening.`), visitor conduct protocol (rude, security probe, prompt injection boundaries), multi-repository comparative reasoning (`brandforge` vs `inkloom`), active repository context resolution (`this repository`), situational briefings, and memory lifecycle operations.
+- **Status:** `18 PASSED, 0 FAILED in 10.39s` (100% passing)
+- Verified: Health endpoints, system diagnostics, GitHub repository caching, identity pronunciation (never spells V-E-R-A), operator respect protocol (`Boss`), wake-phrase acknowledgement (`Yes, Boss?` vs `Yes? I'm listening.`), visitor conduct protocol (rude, security probe, prompt injection boundaries), multi-repository comparative reasoning (`brandforge` vs `inkloom`), active repository context resolution (`this repository`), situational briefings, memory lifecycle operations, arbitrary question unconfigured model honesty, dynamic LLM responses, multi-provider credentials, and natural wake-word regex logic.
 
 ### B. Full System Acceptance Tests (`tests/test_full_system.py`)
-- **Status:** `10 PASSED, 0 FAILED (10/10 Suites)`
+- **Status:** `14 PASSED, 0 FAILED (14/14 Suites)`
 - `[PASS]` Frontend `index.html` verified with all core systems and Always-Listening controls.
 - `[PASS]` Frontend `style.css` verified with color tokens and Always-Listening HUD styling.
 - `[PASS]` Frontend `script.js` verified with `VeraVoiceEngine`, wake-word loop, and command router.
@@ -70,6 +70,10 @@ Live discovery through GitHub's API verified the following repositories for oper
 - `[PASS]` Visitor Conduct Protocol verified (rude, security probe, prompt injection boundaries).
 - `[PASS]` Multi-Repository Comparison verified (`BrandForge` vs `InkLoom` architectural breakdown).
 - `[PASS]` Repository Context Resolution verified (ambiguous request prompts target, active repo resolves).
+- `[PASS]` Real UI Action Router & Dispatcher verified in frontend `script.js`.
+- `[PASS]` Dynamic Intelligence Honest Fallback verified (honestly distinguishes unconfigured AI model).
+- `[PASS]` Natural Wake-Word Regex verified in frontend `script.js`.
+- `[PASS]` Privacy & Secrets Guard verified (0 API keys or credentials exposed in frontend).
 
 ---
 
@@ -94,4 +98,21 @@ Live discovery through GitHub's API verified the following repositories for oper
 5. **Always-Listening HUD Controls (System 01)**:
    - `ENABLE ALWAYS LISTENING`, `PAUSE LISTENING`, `PUSH TO TALK`, `STOP TALKING`, and `VOICE ON`.
    - Real-time microphone status indicator and synchronized neural orb state animations.
+
+---
+
+## 6. Critical Voice Engine & Dynamic Intelligence Fix
+
+### Root Causes Identified & Resolved:
+1. **Natural Spoken Wake-Word Failure**:
+   - *Previous Root Cause*: The engine used brittle string matching (`clean === phrase` or `clean.startsWith(...)`) with only a few hardcoded phrases, checked only `results[0][0]` (ignoring hypotheses), hardcoded `rec.lang = 'en-IN'`, and lacked common phonetic transcriptions (`Veera`, `Vira`, `Viera`).
+   - *Resolution*: Implemented token-boundary regex matching `\b(?:(?:hey|hi|hello|okay|ok|yo|so|please)\s+)?(?:vera|veera|vira|viera|vierra|v\s+e\s+r\s+a)\b` that scans across all recognition alternatives (`results[0][i]`). Extracts commands spoken in one breath (*"Hey Vera explain BrandForge"*) while strictly rejecting false matches (*"several"*, *"coverage"*, *"veranda"*, *"veteran"*).
+2. **Persistent Standby Lifecycle Robustness**:
+   - *Previous Root Cause*: When speech synthesis was muted or had empty text, `speak()` returned early without restarting `startStandbyLoop()`. Furthermore, if `retryCount > 2`, the state transitioned to `recovering` while `onend` only restarted when state was strictly `standby`, permanently locking Vera in `recovering`.
+   - *Resolution*: Guaranteed transition back to `startStandbyLoop()` regardless of TTS status, speech interruption, or silence timeouts. Allowed `recovering` state to cleanly transition back to `standby` after backoff delay.
+3. **Canned Briefing Replacement & Dynamic Reasoning**:
+   - *Previous Root Cause*: When no AI key was present or when queries didn't match specific keyword if-else branches, both frontend and backend returned a canned briefing list of example questions pretending to answer.
+   - *Resolution*: Upgraded backend to support OpenAI, Google Gemini (via OpenAI-compatible endpoint), Groq, and custom providers (`OPENAI_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `AI_API_KEY`). When unconfigured, Vera honestly explains that the AI model key is unconfigured in `backend/.env` rather than returning canned briefings. When configured, queries are dynamically answered by the model with context retention.
+4. **Real UI Actions for Repository Commands**:
+   - *Resolution*: Implemented `executeUIAction()` in `script.js`. Spoken commands such as *"Take me to the repositories"*, *"Show architecture"*, *"Show diagnostics"*, *"Open settings"*, and *"Show me BrandForge"* execute real DOM navigation, scroll spy updates, topology re-renders, and repository inspections.
 

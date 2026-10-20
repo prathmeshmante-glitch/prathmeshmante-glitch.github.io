@@ -55,8 +55,8 @@ async def get_diagnostics():
     return SystemDiagnostics(
         status="nominal",
         backend_version=settings.APP_VERSION,
-        ai_provider_configured=bool(settings.AI_API_KEY),
-        ai_model=settings.AI_MODEL,
+        ai_provider_configured=bool(assistant_engine.client),
+        ai_model=getattr(assistant_engine, "active_model", None) or settings.AI_MODEL,
         github_api_status="connected" if github_service.rate_limit_remaining > 0 else "rate_limited",
         rate_limit_remaining=github_service.rate_limit_remaining,
         total_public_repos=len(repos),

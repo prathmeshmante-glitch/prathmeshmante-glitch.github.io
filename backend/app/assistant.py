@@ -24,17 +24,22 @@ class AssistantEngine:
         self._init_client()
 
     def _init_client(self):
-        if settings.AI_API_KEY:
+        key, base_url, model = settings.get_ai_credentials()
+        if key:
             try:
                 import openai
-                base_url = settings.AI_BASE_URL or "https://api.openai.com/v1"
                 self.client = openai.AsyncOpenAI(
-                    api_key=settings.AI_API_KEY,
-                    base_url=base_url
+                    api_key=key,
+                    base_url=base_url or "https://api.openai.com/v1"
                 )
+                self.active_model = model or "gpt-4o-mini"
             except Exception as e:
                 print(f"Warning: Failed to initialize AI client: {e}")
                 self.client = None
+                self.active_model = None
+        else:
+            self.client = None
+            self.active_model = None
 
     def check_conduct(self, message: str) -> Optional[str]:
         """Detect boundary violations according to Visitor Conduct Protocol."""
@@ -199,7 +204,7 @@ class AssistantEngine:
                     grounded_context += f"README Excerpt:\n{snippet}\n"
 
         # 6. If AI client is configured, call model
-        if self.client and settings.AI_API_KEY:
+        if self.client:
             try:
                 system_content = VERA_SYSTEM_PROMPT
                 if is_owner:
@@ -211,12 +216,13 @@ class AssistantEngine:
                     system_content += f"\n\nCURRENT VERIFIED REPOSITORY CONTEXT:\n{grounded_context}\nAnswer based strictly on this verified context. If an answer cannot be deduced, say so honestly."
 
                 messages = [{"role": "system", "content": system_content}]
-                for h in req.history[-6:]:
+                for h in req.history[-8:]:
                     messages.append({"role": h.role, "content": h.content})
                 messages.append({"role": "user", "content": message})
 
+                model_to_use = getattr(self, "active_model", None) or settings.AI_MODEL
                 resp = await self.client.chat.completions.create(
-                    model=settings.AI_MODEL,
+                    model=model_to_use,
                     messages=messages,
                     temperature=0.3,
                     max_tokens=600
@@ -262,6 +268,43 @@ class AssistantEngine:
             {"title": "GitHub: BrandForge", "url": bf.html_url if bf else "https://github.com/prathmeshmante-glitch/brandforge"},
             {"title": "GitHub: InkLoom", "url": il.html_url if il else "https://github.com/prathmeshmante-glitch/inkloom"}
         ]
+
+        if self.client:
+            try:
+                system_content = (
+                    f"{VERA_SYSTEM_PROMPT}\n"
+                    f"{'VERIFIED OPERATOR MODE ACTIVE: Address the user as Boss.' if is_owner else 'VISITOR MODE ACTIVE.'}\n\n"
+                    "Provide a sharp, senior-level architectural comparison between BrandForge and InkLoom based strictly on the verified repository facts:\n"
+                    f"BrandForge context: {bf.description if bf else ''}. Manifests: {bf.manifest_technologies if bf else ''}.\n"
+                    f"InkLoom context: {il.description if il else ''}. Manifests: {il.manifest_technologies if il else ''}."
+                )
+                model_to_use = getattr(self, "active_model", None) or settings.AI_MODEL
+                resp = await self.client.chat.completions.create(
+                    model=model_to_use,
+                    messages=[
+                        {"role": "system", "content": system_content},
+                        {"role": "user", "content": "Compare BrandForge and InkLoom."}
+                    ],
+                    temperature=0.3,
+                    max_tokens=600
+                )
+                raw_text = resp.choices[0].message.content.strip()
+                lines = raw_text.split("\n\n")
+                spoken = sanitize_spoken_vera(lines[0].replace("#", "").replace("*", "").strip())
+                if len(spoken) > 280:
+                    spoken = spoken[:280] + "..."
+                return ChatResponse(
+                    spoken_reply=spoken,
+                    display_reply=raw_text,
+                    title="Vera // Dynamic Project Comparison",
+                    mode="ai",
+                    source_links=source_links,
+                    comparison_repos=["brandforge", "inkloom"],
+                    detected_intent="project_comparison",
+                    system_state="success"
+                )
+            except Exception as e:
+                print(f"Dynamic comparison failed, using deterministic table: {e}")
 
         boss_prefix = "Boss, " if is_owner else ""
         spoken = (
@@ -392,25 +435,31 @@ class AssistantEngine:
                 system_state="ready"
             )
 
-        # Fallback default response
-        spoken = f"{boss_prefix}Query received. I can analyze repositories, inspect README files, or provide system telemetry. Specify a project such as BrandForge or InkLoom."
+        # Fallback default response when AI model provider is not configured
+        spoken = (
+            f"{boss_prefix}The live backend is connected, but no AI model API key is currently configured for open-ended queries. "
+            f"You can configure an AI_API_KEY or GEMINI_API_KEY in the backend environment, or ask me about BrandForge, InkLoom, and the command deck architecture."
+        )
         return ChatResponse(
             spoken_reply=sanitize_spoken_vera(spoken),
             display_reply=(
-                f"### Vera Reconnaissance Standing By\n"
-                f"I heard: *\"{message}\"*\n\n"
-                f"I can investigate:\n"
-                f"1. **Public Missions**: Inquire about `BrandForge`, `InkLoom`, or live repositories.\n"
-                f"2. **Architecture**: Ask \"How is BrandForge structured?\" or \"Show the API layer.\"\n"
-                f"3. **Dependencies**: Ask \"What technologies are used in the codebase?\"\n"
-                f"4. **Comparison**: Ask \"Compare BrandForge and InkLoom.\"\n\n"
-                f"> **System Notice**: Operating in verified degraded mode (AI provider API key unconfigured). All answers are grounded in real GitHub metadata."
+                f"### AI Model Configuration Required // Degraded Truth Protocol\n"
+                f"I received your inquiry: *\"{message}\"*\n\n"
+                f"- **Backend Status**: Live FastAPI REST engine is connected.\n"
+                f"- **Model Status**: Unconfigured (`AI_API_KEY` or `GEMINI_API_KEY` not active in environment).\n"
+                f"- **Notice**: Dynamic open-ended reasoning requires an AI model key.\n"
+                f"- **Action**: Set your API key in `backend/.env`.\n\n"
+                f"#### Verified Grounded Capabilities:\n"
+                f"- **Repository Inspection**: \"Explain BrandForge\", \"What technologies does InkLoom use?\"\n"
+                f"- **Comparative Analysis**: \"Compare BrandForge and InkLoom\"\n"
+                f"- **System Telemetry**: \"What is your tech stack?\", \"Show diagnostics\"\n"
+                f"- **HUD Actions**: \"Take me to the repositories\", \"Show architecture\""
             ),
-            title="Vera // Awaiting Target",
+            title="Vera // Model Key Required",
             mode="degraded_deterministic",
-            source_links=[{"title": "GitHub Archive", "url": "https://github.com/prathmeshmante-glitch?tab=repositories"}],
-            detected_intent="unrecognized",
-            system_state="warning"
+            source_links=[{"title": "Public Profile", "url": "https://github.com/prathmeshmante-glitch"}],
+            detected_intent="unconfigured_model",
+            system_state="ready"
         )
 
 assistant_engine = AssistantEngine()

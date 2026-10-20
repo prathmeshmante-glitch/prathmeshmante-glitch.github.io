@@ -172,3 +172,106 @@ def test_memory_lifecycle():
     del_res = client.delete("/api/memory?scope=visitor")
     assert del_res.status_code == 200
     assert del_res.json()["success"] is True
+
+def test_arbitrary_question_unconfigured_model_honesty():
+    # When no model API key is set, asking arbitrary questions like "What is recursion?"
+    # must NOT return a canned briefing; it must honestly explain that the AI model is unconfigured.
+    payload = {
+        "message": "What is recursion and how does the call stack work?",
+        "history": [],
+        "caller_role": "guest"
+    }
+    response = client.post("/api/assistant/chat", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mode"] == "degraded_deterministic"
+    assert data["detected_intent"] == "unconfigured_model"
+    # Verify it does NOT return a canned briefing claiming to answer the question
+    assert "no AI model API key" in data["spoken_reply"] or "AI_API_KEY" in data["spoken_reply"]
+    assert "AI Model Configuration Required" in data["display_reply"]
+
+def test_dynamic_llm_response_mocked():
+    # Test that when an AI client is present, arbitrary questions produce mode="ai"
+    from unittest.mock import AsyncMock, MagicMock
+    from app.assistant import assistant_engine
+
+    mock_client = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Recursion is a programming technique where a function calls itself.\n\n### Call Stack Mechanics\nEach recursive call pushes a stack frame."
+    mock_resp = MagicMock(choices=[mock_choice])
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    orig_client = assistant_engine.client
+    assistant_engine.client = mock_client
+    try:
+        payload = {
+            "message": "Explain recursion in Python",
+            "history": [{"role": "user", "content": "Hello"}],
+            "caller_role": "owner"
+        }
+        response = client.post("/api/assistant/chat", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["mode"] == "ai"
+        assert "Recursion is a programming technique" in data["spoken_reply"]
+        assert "Call Stack Mechanics" in data["display_reply"]
+        assert data["detected_intent"] == "ai_response"
+    finally:
+        assistant_engine.client = orig_client
+
+def test_multi_provider_credential_resolver():
+    from app.config import Settings
+    # 1. OpenAI key
+    s_openai = Settings(AI_API_KEY="sk-test-openai")
+    key, url, model = s_openai.get_ai_credentials()
+    assert key == "sk-test-openai"
+    assert url is None
+    assert model == "gpt-4o-mini"
+
+    # 2. Gemini key auto-configures endpoint
+    s_gemini = Settings(GEMINI_API_KEY="AIzaSyTestGemini")
+    key, url, model = s_gemini.get_ai_credentials()
+    assert key == "AIzaSyTestGemini"
+    assert "googleapis.com" in url
+    assert "gemini" in model
+
+    # 3. Groq key auto-configures endpoint
+    s_groq = Settings(GROQ_API_KEY="gsk_testgroq")
+    key, url, model = s_groq.get_ai_credentials()
+    assert key == "gsk_testgroq"
+    assert "groq.com" in url
+    assert "llama" in model
+
+def test_natural_wake_word_regex_logic():
+    import re
+    WAKE_WORD_REGEX = re.compile(
+        r'\b(?:(?:hey|hi|hello|okay|ok|yo|so|please)\s+)?(?:vera|veera|vira|viera|vierra|v\s+e\s+r\s+a)\b',
+        re.IGNORECASE
+    )
+    def is_wake(text):
+        cleaned = re.sub(r'[.,/#!$%^&*;:{}=\-_`~()?\"\'’]', ' ', text)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        collapsed = re.sub(r'\bv\s+e\s+r\s+a\b', 'vera', cleaned, flags=re.IGNORECASE)
+        return bool(WAKE_WORD_REGEX.search(cleaned) or WAKE_WORD_REGEX.search(collapsed))
+
+    # Natural spoken pronunciations MUST match
+    assert is_wake("Vera")
+    assert is_wake("vera")
+    assert is_wake("Veera")
+    assert is_wake("Hey Vera")
+    assert is_wake("Hey, Vera!")
+    assert is_wake("Okay Vera")
+    assert is_wake("Hi Veera")
+    assert is_wake("V.E.R.A.")
+    assert is_wake("V E R A")
+    assert is_wake("Hey Vera explain this repository")
+    assert is_wake("So Vera what is BrandForge")
+
+    # Unrelated words MUST NOT match (prevent false triggers)
+    assert not is_wake("several options")
+    assert not is_wake("coverage")
+    assert not is_wake("veranda")
+    assert not is_wake("veteran")
+    assert not is_wake("average")
+    assert not is_wake("we are here")
+

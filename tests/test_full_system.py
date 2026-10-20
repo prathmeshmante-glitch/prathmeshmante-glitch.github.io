@@ -207,9 +207,80 @@ def test_system():
         print(f"[FAIL] Context Resolution test failed: {e}")
         return False
 
-    print("=== ALL FULL SYSTEM ACCEPTANCE TESTS PASSED (10/10) ===")
+    # 11. Test Real UI Action Router & Dispatcher in Frontend
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:5500/script.js") as resp:
+            assert resp.status == 200
+            js = resp.read().decode('utf-8')
+            assert "executeUIAction" in js
+            assert "take me to the repositories" in js
+            assert "show architecture" in js
+            assert "show diagnostics" in js
+            assert "open settings" in js
+            assert "select_repo" in js
+            print("[PASS] Real UI Action Router & Dispatcher verified in frontend script.js.")
+    except Exception as e:
+        print(f"[FAIL] Real UI Action Router test failed: {e}")
+        return False
+
+    # 12. Test Arbitrary Question Honest Fallback (No canned briefing illusion)
+    try:
+        req = urllib.request.Request(
+            "http://127.0.0.1:8000/api/assistant/chat",
+            data=json.dumps({"message": "What is recursion and call stack mechanics?", "caller_role": "guest"}).encode('utf-8'),
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode('utf-8'))
+            assert data["mode"] == "degraded_deterministic"
+            assert "unconfigured_model" in data["detected_intent"]
+            assert "no AI model API key" in data["spoken_reply"] or "AI_API_KEY" in data["spoken_reply"]
+            # Must NOT be a generic briefing claiming to answer
+            assert "briefing on BrandForge or InkLoom" not in data["spoken_reply"]
+        print("[PASS] Dynamic Intelligence Honest Fallback verified (honestly distinguishes unconfigured AI model).")
+    except Exception as e:
+        print(f"[FAIL] Dynamic Intelligence Fallback test failed: {e}")
+        return False
+
+    # 13. Test Natural Wake-Word Regex in Frontend Code
+    try:
+        import re
+        with urllib.request.urlopen("http://127.0.0.1:5500/script.js") as resp:
+            assert resp.status == 200
+            js = resp.read().decode('utf-8')
+            # Verify regex pattern presence in script.js
+            assert "WAKE_WORD_REGEX" in js
+            assert "veera" in js
+            assert "vira" in js
+            assert "viera" in js
+        print("[PASS] Natural Wake-Word Regex verified in frontend script.js.")
+    except Exception as e:
+        print(f"[FAIL] Natural Wake-Word test failed: {e}")
+        return False
+
+    # 14. Test Privacy & Secrets Guard (No API keys or secrets in frontend files)
+    try:
+        import re
+        openai_key_pattern = re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b')
+        google_key_pattern = re.compile(r'\bAIzaSy[A-Za-z0-9_-]{20,}\b')
+        github_token_pattern = re.compile(r'\bghp_[A-Za-z0-9]{20,}\b')
+
+        for path in ["index.html", "script.js", "style.css"]:
+            with urllib.request.urlopen(f"http://127.0.0.1:5500/{path}") as resp:
+                content = resp.read().decode('utf-8')
+                assert not openai_key_pattern.search(content), f"Possible OpenAI key leaked in {path}"
+                assert not google_key_pattern.search(content), f"Possible Google API key leaked in {path}"
+                assert not github_token_pattern.search(content), f"Possible GitHub token leaked in {path}"
+        print("[PASS] Privacy & Secrets Guard verified (0 API keys or credentials exposed in frontend).")
+    except Exception as e:
+        print(f"[FAIL] Privacy & Secrets Guard test failed: {e}")
+        return False
+
+    print("=== ALL FULL SYSTEM ACCEPTANCE TESTS PASSED (14/14) ===")
     return True
 
 if __name__ == "__main__":
     success = test_system()
     sys.exit(0 if success else 1)
+

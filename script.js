@@ -208,7 +208,17 @@
     // --- SYNTHESIS LIFECYCLE (NEVER FIGHT RECOGNITION) ---
     speak(text, onEndCallback = null) {
       if (this.voiceMuted || !this.synth) {
-        if (onEndCallback) onEndCallback();
+        if (onEndCallback) {
+          onEndCallback();
+        } else if (this.alwaysListening && !this.isPaused) {
+          setTimeout(() => {
+            if (this.alwaysListening && !this.isPaused) {
+              this.startStandbyLoop();
+            }
+          }, 300);
+        } else {
+          setSystemVoiceState('disabled');
+        }
         return;
       }
 
@@ -218,7 +228,17 @@
       const sessionId = ++this.currentSessionId;
       const cleanSpoken = this.sanitizeSpoken(text);
       if (!cleanSpoken) {
-        if (onEndCallback) onEndCallback();
+        if (onEndCallback) {
+          onEndCallback();
+        } else if (this.alwaysListening && !this.isPaused) {
+          setTimeout(() => {
+            if (this.currentSessionId === sessionId && this.alwaysListening && !this.isPaused) {
+              this.startStandbyLoop();
+            }
+          }, 300);
+        } else {
+          setSystemVoiceState('disabled');
+        }
         return;
       }
 
@@ -228,7 +248,7 @@
 
       const utterance = new SpeechSynthesisUtterance(cleanSpoken);
       if (state.selectedVoice) utterance.voice = state.selectedVoice;
-      utterance.lang = state.selectedVoice ? state.selectedVoice.lang : 'en-IN';
+      utterance.lang = state.selectedVoice ? state.selectedVoice.lang : (navigator.language || 'en-US');
       utterance.rate = state.speechRate || 1.0;
       utterance.pitch = 1.05;
 
@@ -304,32 +324,43 @@
 
     // --- WAKE-WORD NORMALIZATION & MATCHING ---
     normalizeForWakeWord(text) {
-      if (!text) return '';
+      if (!text || typeof text !== 'string') return '';
       return text
-        .toLowerCase()
-        .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'’]/g, '')
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()?\"'’]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
     }
 
     checkWakeWord(transcript) {
-      const clean = this.normalizeForWakeWord(transcript);
-      // Support common speech-recognition variants: Vera, Hey Vera, Okay Vera, Vira, V.E.R.A.
-      const wakePhrases = [
-        'hey vera', 'okay vera', 'ok vera', 'hi vera', 'hello vera',
-        'vera', 'vira', 'v e r a'
-      ];
-
-      for (const phrase of wakePhrases) {
-        if (clean === phrase) {
-          return { isWake: true, command: null };
-        }
-        if (clean.startsWith(phrase + ' ')) {
-          const remainder = clean.slice(phrase.length).trim();
-          return { isWake: true, command: remainder };
-        }
+      if (!transcript || typeof transcript !== 'string') {
+        return { isWake: false, command: null };
       }
-      return { isWake: false, command: null };
+
+      // 1. Clean punctuation for normalization
+      const cleaned = this.normalizeForWakeWord(transcript);
+      if (!cleaned) return { isWake: false, command: null };
+
+      // 2. Acronym collapse: "v e r a" -> "vera"
+      const collapsed = cleaned.replace(/\bv\s+e\s+r\s+a\b/gi, 'vera');
+
+      // Word boundary regex matching natural pronunciations (Vera, Veera, Vira, Viera, Vierra, V E R A)
+      // and natural wake phrases (Hey Vera, Hi Vera, Okay Vera, OK Vera, Hello Vera, So Vera)
+      const WAKE_WORD_REGEX = /\b(?:(?:hey|hi|hello|okay|ok|yo|so|please)\s+)?(?:vera|veera|vira|viera|vierra|v\s+e\s+r\s+a)\b/i;
+
+      const match = cleaned.match(WAKE_WORD_REGEX) || collapsed.match(WAKE_WORD_REGEX);
+      if (!match) {
+        return { isWake: false, command: null };
+      }
+
+      const matchStr = match[0];
+      const matchIndex = match.index !== undefined ? match.index : cleaned.indexOf(matchStr);
+      const after = cleaned.slice(matchIndex + matchStr.length).trim();
+      const before = cleaned.slice(0, matchIndex).trim();
+
+      // If text exists after wake phrase, that is the immediate command ("Hey Vera explain BrandForge")
+      // If text exists before wake phrase, user spoke command first ("Can you explain this Vera")
+      const command = after || before || null;
+      return { isWake: true, command: command, matchPhrase: matchStr };
     }
 
     // --- ALWAYS-LISTENING STANDBY LOOP ---
@@ -346,7 +377,7 @@
       try {
         const rec = new this.SpeechRecClass();
         this.recognition = rec;
-        rec.lang = 'en-IN';
+        rec.lang = state.selectedVoice ? state.selectedVoice.lang : (navigator.language || 'en-US');
         rec.continuous = false; // Managed restart loop is vastly more reliable across browsers than continuous=true
         rec.interimResults = false;
         rec.maxAlternatives = 3;
@@ -360,13 +391,29 @@
         rec.onresult = (event) => {
           if (this.currentSessionId !== sessionId) return;
           if (!event.results || !event.results[0]) return;
-          
-          this.retryCount = 0; // Reset exponential backoff on successful recognition
-          const transcript = event.results[0][0].transcript.trim();
-          const match = this.checkWakeWord(transcript);
 
-          if (match.isWake) {
-            this.handleWakeDetected(match.command);
+          this.retryCount = 0; // Reset exponential backoff on successful recognition
+
+          let bestMatch = null;
+          const candidates = [];
+
+          for (let i = 0; i < event.results[0].length; i++) {
+            const candidateText = (event.results[0][i].transcript || '').trim();
+            if (!candidateText) continue;
+            candidates.push({ transcript: candidateText, confidence: event.results[0][i].confidence || 0 });
+            const candidateMatch = this.checkWakeWord(candidateText);
+            if (candidateMatch.isWake) {
+              bestMatch = candidateMatch;
+              break;
+            }
+          }
+
+          if (window.VERA_DEBUG) {
+            console.log('[VeraVoiceEngine] Standby transcript hypotheses:', candidates, 'Match:', bestMatch);
+          }
+
+          if (bestMatch && bestMatch.isWake) {
+            this.handleWakeDetected(bestMatch.command);
           }
         };
 
@@ -383,7 +430,7 @@
             // Silence timeout is normal in browser Web Speech API
             return;
           }
-          console.warn('Standby speech error:', err);
+          if (window.VERA_DEBUG) console.warn('Standby speech error:', err);
           this.retryCount++;
         };
 
@@ -391,8 +438,8 @@
           if (this.currentSessionId !== sessionId) return;
           this.recognition = null;
 
-          // If still in standby and always-listening is enabled, cleanly restart with backoff
-          if (this.alwaysListening && !this.isPaused && state.voiceState === 'standby') {
+          // If still in standby or recovering and always-listening is enabled, cleanly restart with backoff
+          if (this.alwaysListening && !this.isPaused && (state.voiceState === 'standby' || state.voiceState === 'recovering')) {
             const backoff = this.retryCount > 0 ? Math.min(1000 * Math.pow(1.5, this.retryCount), 12000) : 350;
             if (this.retryCount > 2) {
               setSystemVoiceState('recovering');
@@ -456,7 +503,7 @@
       try {
         const rec = new this.SpeechRecClass();
         this.recognition = rec;
-        rec.lang = 'en-IN';
+        rec.lang = state.selectedVoice ? state.selectedVoice.lang : (navigator.language || 'en-US');
         rec.continuous = false;
         rec.interimResults = false;
         rec.maxAlternatives = 3;
@@ -521,6 +568,30 @@
       }
     }
 
+    // --- REAL UI ACTION DISPATCHER ---
+    executeUIAction(type, target, confirmationSpeech) {
+      if (type === 'navigate') {
+        const el = $(target);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          document.querySelectorAll('.nav-item').forEach(n => {
+            n.classList.toggle('active', n.getAttribute('href') === `#${target}`);
+          });
+        }
+        addMessageToFeed('assistant', confirmationSpeech, { title: 'Vera // Navigation' });
+        this.speak(confirmationSpeech);
+      } else if (type === 'select_repo') {
+        const clean = target.toLowerCase();
+        state.activeRepo = clean;
+        renderArchitectureGraph(clean);
+
+        const el = $('archive');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+
+        conductProjectBriefing(clean);
+      }
+    }
+
     // --- NATURAL LANGUAGE COMMAND ROUTER ---
     routeSpokenCommand(commandText) {
       if (!commandText || !commandText.trim()) return;
@@ -535,7 +606,7 @@
       }
 
       // 2. Local Deterministic Actions: Pause Listening
-      if (['pause listening', 'stop listening', 'go to standby', 'stand down'].some(p => lower.includes(p))) {
+      if (['pause listening', 'stop listening', 'go to standby', 'stand down', 'pause voice'].some(p => lower.includes(p))) {
         this.pauseListening();
         addMessageToFeed('assistant', 'Listening paused. Standing down.', { title: 'Local Command // Listening Paused' });
         this.speak('Listening paused. Standing by.');
@@ -543,7 +614,7 @@
       }
 
       // 3. Local Deterministic Actions: Resume Listening
-      if (['resume listening', 'start listening', 'wake up'].some(p => lower.includes(p))) {
+      if (['resume listening', 'start listening', 'wake up', 'resume voice'].some(p => lower.includes(p))) {
         this.resumeListening();
         addMessageToFeed('assistant', 'Always-listening mode resumed.', { title: 'Local Command // Resumed' });
         this.speak('Always listening resumed.');
@@ -577,7 +648,42 @@
         return;
       }
 
-      // 6. Local Deterministic Actions: Capability / Help
+      // 6. UI Navigation Actions (Make voice commands perform REAL interface actions)
+      if (['take me to the repositories', 'take me to repositories', 'show me the repositories', 'show repositories', 'open repositories', 'open archive', 'go to archive', 'show archive', 'go to missions'].some(p => lower.includes(p))) {
+        this.executeUIAction('navigate', 'archive', 'Navigating to Mission Archive.');
+        return;
+      }
+      if (['show architecture', 'show me the architecture', 'take me to architecture', 'go to architecture', 'view architecture', 'open architecture'].some(p => lower.includes(p))) {
+        this.executeUIAction('navigate', 'architecture', 'Displaying system architecture topology.');
+        return;
+      }
+      if (['show diagnostics', 'take me to diagnostics', 'view diagnostics', 'open diagnostics', 'system diagnostics'].some(p => lower.includes(p))) {
+        this.executeUIAction('navigate', 'diagnostics', 'Opening system diagnostics HUD.');
+        return;
+      }
+      if (['open settings', 'take me to settings', 'show settings', 'go to settings'].some(p => lower.includes(p))) {
+        this.executeUIAction('navigate', 'settings', 'Opening system settings panel.');
+        return;
+      }
+      if (['go home', 'go to core', 'scroll to top', 'return to core'].some(p => lower.includes(p))) {
+        this.executeUIAction('navigate', 'core', 'Returning to V.E.R.A. Core console.');
+        return;
+      }
+
+      // 7. Repository Selection & Deep Inspection Actions ("Show me BrandForge", "Open InkLoom")
+      if (lower.startsWith('show me ') || lower.startsWith('open ') || lower.startsWith('inspect ') || lower.startsWith('select ')) {
+        const targetCandidate = lower.replace(/^(show me|open|inspect|select)\s+/i, '').trim();
+        const matchedRepo = state.repositories.find(r => 
+          targetCandidate.includes(r.name.toLowerCase()) || 
+          r.name.toLowerCase().includes(targetCandidate)
+        );
+        if (matchedRepo) {
+          this.executeUIAction('select_repo', matchedRepo.name, `Opening ${matchedRepo.name} in Mission Archive.`);
+          return;
+        }
+      }
+
+      // 8. Local Deterministic Actions: Capability / Help
       if (['what are you capable of', 'what can you do', 'help', 'capabilities'].some(p => lower.includes(p))) {
         const caps = "I am Vera, personal engineering intelligence for Prathmesh Mante. I can inspect public repositories like BrandForge and InkLoom, analyze architecture topologies, extract tech matrices, compare projects, and answer technical questions hands-free.";
         addMessageToFeed('user', cmd);
@@ -589,7 +695,7 @@
         return;
       }
 
-      // 7. General & Repository Commands ➔ Process via Chat Engine
+      // 9. General & Repository Commands ➔ Process via Chat Engine
       handleUserChatMessage(cmd);
     }
 
@@ -1434,8 +1540,9 @@
       replyDisplay = '### Senior Architectural Review Points\n1. **Agent Guardrails**: Validating that LangGraph cycles cannot loop indefinitely.\n2. **Type Safety**: Ensuring shared schema definitions between FastAPI (Pydantic) and Next.js (TypeScript).\n3. **Decoupled Fallbacks**: Maintaining client operation when upstream model APIs experience latency.';
       title = 'Senior Engineering Review';
     } else {
-      replySpoken = `Query acknowledged. I am tracking ${state.repositories.length} public engineering repositories for operator Prathmesh Mante. Would you like a briefing on BrandForge or InkLoom?`;
-      replyDisplay = `### Vera Standing By\nI analyzed your inquiry: *"${text}"*.\n\nYou can ask about:\n- **Specific Projects**: "Explain BrandForge", "What is InkLoom?"\n- **Architecture**: "How does the backend interact with the frontend?"\n- **Comparison**: "Compare BrandForge and InkLoom."`;
+      replySpoken = "The FastAPI backend is currently unreachable. Without the live backend connection, I cannot formulate dynamic AI answers. You can inspect the verified repositories and architecture in the command deck.";
+      replyDisplay = `### Backend Service Offline // Standalone Mode\nI received: *"${text}"*\n\n- **Status**: FastAPI backend is unreachable at \`${CONFIG.BACKEND_URL || 'offline'}\`.\n- **Limitation**: Dynamic natural-language reasoning requires the live backend service.\n- **Action**: Run \`python -m uvicorn app.main:app\` to start the backend.\n- **Available Locally**: Repository cards, architecture graph topology, and system telemetry.`;
+      title = 'Vera // Backend Offline';
     }
 
     addMessageToFeed('assistant', replySpoken, { title, rawDisplay: replyDisplay });
