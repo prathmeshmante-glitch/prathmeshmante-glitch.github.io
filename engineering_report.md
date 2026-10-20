@@ -15,7 +15,7 @@ The portfolio repository has been transformed from a static starter template int
 
 ### What Was Built:
 1. **Cinematic HUD Command Deck**: Dark obsidian (`#080A0F`), reactor gold (`#F4B95F`), and telemetry cyan (`#66D9E8`) interface featuring 3D multi-axis orbital rings, dynamic 16-bar responsive audio waveforms, telemetry nodes, and glassmorphic panels.
-2. **Engineered Voice Subsystem**: Full state-machine (`idle` ➔ `listening` ➔ `transcribing` ➔ `thinking` ➔ `speaking`), phonetic normalization for the demonstration passphrase (`Prat`), acoustic loopback prevention, and prioritized feminine English voice selection (Samantha, Zira, Jenny, Veena, etc.).
+2. **Engineered Voice Subsystem**: Full state-machine (`idle` ➔ `listening` ➔ `transcribing` ➔ `thinking` ➔ `speaking`), keyword-based recognition for the demonstration phrase (`Open the command deck`), acoustic loopback prevention, and prioritized feminine English voice selection (Samantha, Zira, Jenny, Veena, etc.).
 3. **Dual-Mode AI Architecture**:
    - **FastAPI Python Backend** (`/backend`): High-speed REST API providing multi-provider LLM orchestration (OpenAI, Gemini, OpenRouter), live GitHub caching, and grounded README retrieval.
    - **Honest Degraded Mode**: When no AI API key is configured or during offline operations, V.E.R.A. remains 100% functional, grounding every architectural explanation in verified public repository metadata and manifests (`package.json`, `requirements.txt`).
