@@ -37,6 +37,8 @@ class ChatResponse(BaseModel):
     mode: str = "ai"  # ai or degraded_deterministic
     source_links: List[Dict[str, str]] = []
     detected_intent: Optional[str] = None
+    conduct_flag: Optional[str] = None
+    comparison_repos: Optional[List[str]] = None
     system_state: str = "ready"
 
 class MemoryEntry(BaseModel):

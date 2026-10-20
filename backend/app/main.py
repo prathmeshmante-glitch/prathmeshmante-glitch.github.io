@@ -90,7 +90,7 @@ async def get_situational_briefing():
     sync_str = time.strftime('%H:%M:%S', time.localtime(github_service.last_sync_time)) if github_service.last_sync_time else "recent"
     repo_names = [r.name for r in repos[:3]]
     spoken = (
-        f"All systems nominal. V.E.R.A. indexed {len(repos)} public repositories. "
+        f"All systems nominal. Vera indexed {len(repos)} public repositories. "
         f"Featured projects include {', '.join(repo_names)}. Standing by for instructions."
     )
     return {
@@ -100,6 +100,15 @@ async def get_situational_briefing():
         "recent_repos": repo_names,
         "last_sync": sync_str
     }
+
+@app.get("/api/assistant/wake-acknowledgement")
+async def get_wake_acknowledgement(caller_role: str = "guest"):
+    from app.personality import WAKE_ACKNOWLEDGEMENTS_OPERATOR, WAKE_ACKNOWLEDGEMENTS_VISITOR
+    if caller_role == "owner":
+        ack = WAKE_ACKNOWLEDGEMENTS_OPERATOR[0]  # "Yes, Boss?"
+    else:
+        ack = WAKE_ACKNOWLEDGEMENTS_VISITOR[0]   # "Yes? I'm listening."
+    return {"acknowledgement": ack, "caller_role": caller_role}
 
 @app.get("/api/memory", response_model=MemoryState)
 async def get_memory(scope: str = "visitor"):

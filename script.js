@@ -145,12 +145,22 @@
 
   const sfx = new SoundFX();
 
-  // --- SPEECH ENGINE (RECOGNITION & SYNTHESIS) ---
-  class SpeechEngine {
+  // --- VERA VOICE ENGINE (JARVIS-STYLE ALWAYS-ON VOICE SUBSYSTEM) ---
+  class VeraVoiceEngine {
     constructor() {
       this.recognition = null;
       this.synth = window.speechSynthesis || null;
       this.SpeechRecClass = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+      
+      // State machine properties
+      this.alwaysListening = false;
+      this.isPaused = false;
+      this.voiceMuted = false;
+      this.currentSessionId = 0;
+      this.retryCount = 0;
+      this.retryTimer = null;
+      this.noSpeechNagCount = 0;
+
       this.initVoices();
     }
 
@@ -171,13 +181,9 @@
       if (!state.availableVoices.length) return;
       const feminineRegex = /samantha|zira|aria|jenny|susan|karen|moira|tessa|veena|sara|female|woman|google uk english female|natural/i;
       
-      // 1. English feminine voice
       let match = state.availableVoices.find(v => feminineRegex.test(v.name) && /^en/i.test(v.lang));
-      // 2. English Indian voice (operator locale)
       if (!match) match = state.availableVoices.find(v => /^en-IN/i.test(v.lang));
-      // 3. Any English voice
       if (!match) match = state.availableVoices.find(v => /^en/i.test(v.lang));
-      // 4. Default
       if (!match) match = state.availableVoices[0];
 
       state.selectedVoice = match;
@@ -186,17 +192,39 @@
       }
     }
 
-    speak(text, onEndCallback = null) {
-      if (!this.synth) return;
-      // Stop any pending speech
-      this.synth.cancel();
-
-      // Clean markdown tags for spoken output
-      const cleanSpoken = text
-        .replace(/[*#_`>]/g, '')
+    // --- SANITIZE SPOKEN TEXT (ALWAYS PRONOUNCE VERA AS A NAME, NEVER SPELL V-E-R-A) ---
+    sanitizeSpoken(text) {
+      if (!text) return '';
+      return text
+        .replace(/\bV\.E\.R\.A\.?\b/gi, 'Vera')
+        .replace(/\bV-E-R-A\b/gi, 'Vera')
+        .replace(/\bV\s+dot\s+E\s+dot\s+R\s+dot\s+A\b/gi, 'Vera')
+        .replace(/[*#_`>~]/g, '')
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
         .replace(/\s+/g, ' ')
         .trim();
+    }
+
+    // --- SYNTHESIS LIFECYCLE (NEVER FIGHT RECOGNITION) ---
+    speak(text, onEndCallback = null) {
+      if (this.voiceMuted || !this.synth) {
+        if (onEndCallback) onEndCallback();
+        return;
+      }
+
+      // Stop recognition immediately before speaking to prevent acoustic loopback
+      this.abortRecognition();
+
+      const sessionId = ++this.currentSessionId;
+      const cleanSpoken = this.sanitizeSpoken(text);
+      if (!cleanSpoken) {
+        if (onEndCallback) onEndCallback();
+        return;
+      }
+
+      try {
+        this.synth.cancel();
+      } catch (_) {}
 
       const utterance = new SpeechSynthesisUtterance(cleanSpoken);
       if (state.selectedVoice) utterance.voice = state.selectedVoice;
@@ -205,19 +233,37 @@
       utterance.pitch = 1.05;
 
       utterance.onstart = () => {
+        if (this.currentSessionId !== sessionId) return;
         setSystemVoiceState('speaking');
+        if ($('interruptSpeechBtn')) $('interruptSpeechBtn').disabled = false;
         if ($('stopSpeechBtn')) $('stopSpeechBtn').disabled = false;
       };
 
-      utterance.onend = () => {
-        setSystemVoiceState('idle');
+      const handleSpeechDone = () => {
+        if (this.currentSessionId !== sessionId) return;
+        if ($('interruptSpeechBtn')) $('interruptSpeechBtn').disabled = true;
         if ($('stopSpeechBtn')) $('stopSpeechBtn').disabled = true;
-        if (onEndCallback) onEndCallback();
+
+        if (onEndCallback) {
+          onEndCallback();
+        } else {
+          // Normal flow: after answering aloud, automatically return to wake-word standby!
+          if (this.alwaysListening && !this.isPaused) {
+            setTimeout(() => {
+              if (this.currentSessionId === sessionId && this.alwaysListening && !this.isPaused) {
+                this.startStandbyLoop();
+              }
+            }, 300); // 300ms acoustic dissipation buffer
+          } else {
+            setSystemVoiceState('disabled');
+          }
+        }
       };
 
-      utterance.onerror = () => {
-        setSystemVoiceState('idle');
-        if ($('stopSpeechBtn')) $('stopSpeechBtn').disabled = true;
+      utterance.onend = handleSpeechDone;
+      utterance.onerror = (err) => {
+        console.warn('Speech synthesis ended with event:', err);
+        handleSpeechDone();
       };
 
       this.synth.speak(utterance);
@@ -227,99 +273,445 @@
       if (this.synth) {
         this.synth.cancel();
       }
-      setSystemVoiceState('idle');
+      this.currentSessionId++;
+      if ($('interruptSpeechBtn')) $('interruptSpeechBtn').disabled = true;
       if ($('stopSpeechBtn')) $('stopSpeechBtn').disabled = true;
+
+      if (this.alwaysListening && !this.isPaused) {
+        this.startStandbyLoop();
+      } else {
+        setSystemVoiceState(this.alwaysListening ? 'paused' : 'disabled');
+      }
     }
 
-    startListening(purpose = 'chat') {
-      if (!this.SpeechRecClass) {
-        handleSpeechError('unsupported', purpose);
-        return;
-      }
-
-      // Stop speech synthesis first to prevent audio loopback / microphone competition
-      this.stopSpeaking();
-
-      // Clean up previous recognition session
+    // --- RECOGNITION HELPERS ---
+    abortRecognition() {
       if (this.recognition) {
         try {
+          this.recognition.onstart = null;
+          this.recognition.onresult = null;
+          this.recognition.onerror = null;
+          this.recognition.onend = null;
           this.recognition.abort();
         } catch (_) {}
         this.recognition = null;
       }
+      if (this.retryTimer) {
+        clearTimeout(this.retryTimer);
+        this.retryTimer = null;
+      }
+    }
+
+    // --- WAKE-WORD NORMALIZATION & MATCHING ---
+    normalizeForWakeWord(text) {
+      if (!text) return '';
+      return text
+        .toLowerCase()
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'’]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    checkWakeWord(transcript) {
+      const clean = this.normalizeForWakeWord(transcript);
+      // Support common speech-recognition variants: Vera, Hey Vera, Okay Vera, Vira, V.E.R.A.
+      const wakePhrases = [
+        'hey vera', 'okay vera', 'ok vera', 'hi vera', 'hello vera',
+        'vera', 'vira', 'v e r a'
+      ];
+
+      for (const phrase of wakePhrases) {
+        if (clean === phrase) {
+          return { isWake: true, command: null };
+        }
+        if (clean.startsWith(phrase + ' ')) {
+          const remainder = clean.slice(phrase.length).trim();
+          return { isWake: true, command: remainder };
+        }
+      }
+      return { isWake: false, command: null };
+    }
+
+    // --- ALWAYS-LISTENING STANDBY LOOP ---
+    startStandbyLoop() {
+      if (!this.SpeechRecClass) {
+        setSystemVoiceState('unsupported');
+        return;
+      }
+
+      this.abortRecognition();
+      const sessionId = ++this.currentSessionId;
+      setSystemVoiceState('standby');
 
       try {
-        this.recognition = new this.SpeechRecClass();
-        this.recognition.lang = 'en-IN';
-        this.recognition.interimResults = false;
-        this.recognition.maxAlternatives = 3;
+        const rec = new this.SpeechRecClass();
+        this.recognition = rec;
+        rec.lang = 'en-IN';
+        rec.continuous = false; // Managed restart loop is vastly more reliable across browsers than continuous=true
+        rec.interimResults = false;
+        rec.maxAlternatives = 3;
 
-        this.recognition.onstart = () => {
-          setSystemVoiceState('listening');
-          sfx.playChime('listen_start');
-          if (purpose === 'auth') {
-            updateAuthStatus('LISTENING FOR PASSPHRASE… SAY “OPEN THE COMMAND DECK”', 'listening');
-          } else {
-            $('chatHeadline').textContent = 'V.E.R.A. is listening to your command…';
-          }
+        rec.onstart = () => {
+          if (this.currentSessionId !== sessionId) return;
+          setSystemVoiceState('standby');
+          $('chatHeadline').textContent = 'Vera is listening for wake phrase “Vera”…';
         };
 
-        this.recognition.onresult = (event) => {
+        rec.onresult = (event) => {
+          if (this.currentSessionId !== sessionId) return;
           if (!event.results || !event.results[0]) return;
-          const result = event.results[0];
-          const alternatives = [];
-          for (let i = 0; i < result.length; i++) {
-            const candidate = (result[i].transcript || '').trim();
-            if (candidate) alternatives.push(candidate);
-          }
-          // Prefer a recognized authorization phrase from any browser alternative.
-          const transcript = purpose === 'auth'
-            ? (alternatives.find(verifyPassphrase) || alternatives[0] || '')
-            : (alternatives[0] || '');
-          setSystemVoiceState('transcribing');
+          
+          this.retryCount = 0; // Reset exponential backoff on successful recognition
+          const transcript = event.results[0][0].transcript.trim();
+          const match = this.checkWakeWord(transcript);
 
-          if (purpose === 'auth') {
-            handleAuthResult(transcript);
-          } else {
-            handleUserChatMessage(transcript);
+          if (match.isWake) {
+            this.handleWakeDetected(match.command);
           }
         };
 
-        this.recognition.onerror = (event) => {
-          setSystemVoiceState('error');
-          handleSpeechError(event.error, purpose);
+        rec.onerror = (event) => {
+          if (this.currentSessionId !== sessionId) return;
+          const err = event.error;
+          if (err === 'not-allowed' || err === 'service-not-allowed') {
+            setSystemVoiceState('permission_denied');
+            this.alwaysListening = false;
+            updateAlwaysListenBtnUI();
+            return;
+          }
+          if (err === 'no-speech') {
+            // Silence timeout is normal in browser Web Speech API
+            return;
+          }
+          console.warn('Standby speech error:', err);
+          this.retryCount++;
         };
 
-        this.recognition.onend = () => {
+        rec.onend = () => {
+          if (this.currentSessionId !== sessionId) return;
           this.recognition = null;
-          if (state.voiceState === 'listening') {
-            setSystemVoiceState('idle');
-            if (purpose === 'auth' && !state.authorized) {
-              updateAuthStatus('VOICE SESSION CLOSED · SELECT RETRY', 'idle');
-              $('retryVoiceBtn').hidden = false;
+
+          // If still in standby and always-listening is enabled, cleanly restart with backoff
+          if (this.alwaysListening && !this.isPaused && state.voiceState === 'standby') {
+            const backoff = this.retryCount > 0 ? Math.min(1000 * Math.pow(1.5, this.retryCount), 12000) : 350;
+            if (this.retryCount > 2) {
+              setSystemVoiceState('recovering');
+            }
+            this.retryTimer = setTimeout(() => {
+              if (this.currentSessionId === sessionId && this.alwaysListening && !this.isPaused) {
+                this.startStandbyLoop();
+              }
+            }, backoff);
+          }
+        };
+
+        rec.start();
+      } catch (e) {
+        console.error('Failed to start standby recognition:', e);
+        setSystemVoiceState('error');
+      }
+    }
+
+    // --- WAKE DETECTED ➔ ACKNOWLEDGE ➔ CAPTURE COMMAND ---
+    handleWakeDetected(immediateCommand = null) {
+      const sessionId = ++this.currentSessionId;
+      this.abortRecognition();
+
+      setSystemVoiceState('wake_detected');
+      sfx.playChime('ready');
+      $('chatHeadline').textContent = 'Wake word detected!';
+
+      setTimeout(() => {
+        if (this.currentSessionId !== sessionId) return;
+
+        // If user already issued command in one breath ("Vera explain BrandForge")
+        if (immediateCommand && immediateCommand.length > 2) {
+          this.routeSpokenCommand(immediateCommand);
+          return;
+        }
+
+        // Otherwise acknowledge and then start capturing command
+        setSystemVoiceState('acknowledging');
+        const ackText = (state.callerRole === 'owner') ? 'Yes, Boss?' : 'Yes? I’m listening.';
+        $('chatHeadline').textContent = `Vera: “${ackText}”`;
+
+        this.speak(ackText, () => {
+          // On acknowledgement speech completion, start command capture!
+          if (this.currentSessionId !== sessionId) return;
+          this.startCommandCaptureSession();
+        });
+      }, 350);
+    }
+
+    // --- COMMAND CAPTURE SESSION ---
+    startCommandCaptureSession() {
+      if (!this.SpeechRecClass) return;
+      this.abortRecognition();
+
+      const sessionId = ++this.currentSessionId;
+      setSystemVoiceState('capturing_command');
+      sfx.playChime('listen_start');
+      $('chatHeadline').textContent = 'Listening for your command...';
+
+      try {
+        const rec = new this.SpeechRecClass();
+        this.recognition = rec;
+        rec.lang = 'en-IN';
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.maxAlternatives = 3;
+
+        let speechCaptured = false;
+
+        rec.onstart = () => {
+          if (this.currentSessionId !== sessionId) return;
+          setSystemVoiceState('capturing_command');
+        };
+
+        rec.onresult = (event) => {
+          if (this.currentSessionId !== sessionId) return;
+          if (!event.results || !event.results[0]) return;
+          speechCaptured = true;
+          this.noSpeechNagCount = 0; // Reset nag count on actual speech
+
+          const transcript = event.results[0][0].transcript.trim();
+          setSystemVoiceState('transcribing');
+          this.routeSpokenCommand(transcript);
+        };
+
+        rec.onerror = (event) => {
+          if (this.currentSessionId !== sessionId) return;
+          if (event.error === 'no-speech') {
+            // Handled in onend
+          } else {
+            console.warn('Command capture error:', event.error);
+          }
+        };
+
+        rec.onend = () => {
+          if (this.currentSessionId !== sessionId) return;
+          this.recognition = null;
+
+          if (!speechCaptured && state.voiceState === 'capturing_command') {
+            // No speech detected after acknowledgment
+            if (this.noSpeechNagCount === 0) {
+              this.noSpeechNagCount++;
+              this.speak("I'm still here when you're ready.", () => {
+                if (this.alwaysListening && !this.isPaused) {
+                  this.startStandbyLoop();
+                } else {
+                  setSystemVoiceState('disabled');
+                }
+              });
+            } else {
+              // Return to standby quietly without nagging repeatedly
+              if (this.alwaysListening && !this.isPaused) {
+                this.startStandbyLoop();
+              } else {
+                setSystemVoiceState('disabled');
+              }
             }
           }
         };
 
-        this.recognition.start();
+        rec.start();
       } catch (err) {
+        console.error('Command capture failed to start:', err);
         setSystemVoiceState('error');
-        handleSpeechError('initialization-failed', purpose);
+      }
+    }
+
+    // --- NATURAL LANGUAGE COMMAND ROUTER ---
+    routeSpokenCommand(commandText) {
+      if (!commandText || !commandText.trim()) return;
+      const cmd = commandText.trim();
+      const lower = cmd.toLowerCase();
+
+      // 1. Local Deterministic Actions: Stop Talking
+      if (['stop talking', 'stop speaking', 'quiet', 'silence', 'shut up', 'mute'].some(p => lower.includes(p))) {
+        this.stopSpeaking();
+        addMessageToFeed('assistant', 'Speech stopped. Standing by.', { title: 'Local Command // Speech Stopped' });
+        return;
+      }
+
+      // 2. Local Deterministic Actions: Pause Listening
+      if (['pause listening', 'stop listening', 'go to standby', 'stand down'].some(p => lower.includes(p))) {
+        this.pauseListening();
+        addMessageToFeed('assistant', 'Listening paused. Standing down.', { title: 'Local Command // Listening Paused' });
+        this.speak('Listening paused. Standing by.');
+        return;
+      }
+
+      // 3. Local Deterministic Actions: Resume Listening
+      if (['resume listening', 'start listening', 'wake up'].some(p => lower.includes(p))) {
+        this.resumeListening();
+        addMessageToFeed('assistant', 'Always-listening mode resumed.', { title: 'Local Command // Resumed' });
+        this.speak('Always listening resumed.');
+        return;
+      }
+
+      // 4. Local Deterministic Actions: Repeat Previous Response
+      if (['repeat that', 'repeat previous response', 'say that again', 'say again'].some(p => lower.includes(p))) {
+        if (state.lastAssistantReply) {
+          this.speak(state.lastAssistantReply);
+        } else {
+          this.speak('There is no previous response to repeat.');
+        }
+        return;
+      }
+
+      // 5. Local Deterministic Actions: Speech Rate Adjustment
+      if (lower.includes('speak more slowly') || lower.includes('speak slower') || lower.includes('slower')) {
+        state.speechRate = Math.max(0.7, (state.speechRate || 1.0) - 0.2);
+        if ($('speechRateSlider')) $('speechRateSlider').value = state.speechRate;
+        if ($('speechRateVal')) $('speechRateVal').textContent = `${state.speechRate.toFixed(2)}x`;
+        this.speak(`Speech rate reduced to ${state.speechRate.toFixed(1)}x.`);
+        return;
+      }
+
+      if (lower.includes('speak faster') || lower.includes('faster')) {
+        state.speechRate = Math.min(1.6, (state.speechRate || 1.0) + 0.2);
+        if ($('speechRateSlider')) $('speechRateSlider').value = state.speechRate;
+        if ($('speechRateVal')) $('speechRateVal').textContent = `${state.speechRate.toFixed(2)}x`;
+        this.speak(`Speech rate increased to ${state.speechRate.toFixed(1)}x.`);
+        return;
+      }
+
+      // 6. Local Deterministic Actions: Capability / Help
+      if (['what are you capable of', 'what can you do', 'help', 'capabilities'].some(p => lower.includes(p))) {
+        const caps = "I am Vera, personal engineering intelligence for Prathmesh Mante. I can inspect public repositories like BrandForge and InkLoom, analyze architecture topologies, extract tech matrices, compare projects, and answer technical questions hands-free.";
+        addMessageToFeed('user', cmd);
+        addMessageToFeed('assistant', caps, {
+          title: 'Vera // Core Capabilities',
+          rawDisplay: '### Vera Capabilities & Directives\n- **Hands-Free Operation**: Always-on wake phrase (“Vera”) recognition with automatic recovery.\n- **Repository Intelligence**: Grounded insights into `BrandForge`, `InkLoom`, and all public portfolio projects.\n- **Architecture Topology**: Visual and conceptual system flow breakdowns.\n- **Natural Language Comparison**: Contrast technologies and architectural trade-offs.\n- **Conduct Protocol**: Composed boundary enforcement and privacy protection.'
+        });
+        this.speak(caps);
+        return;
+      }
+
+      // 7. General & Repository Commands ➔ Process via Chat Engine
+      handleUserChatMessage(cmd);
+    }
+
+    // --- CONTROL ACTIONS ---
+    enableAlwaysListening() {
+      if (!this.SpeechRecClass) {
+        setSystemVoiceState('unsupported');
+        handleSpeechError('unsupported', 'always_listen');
+        return;
+      }
+      this.alwaysListening = true;
+      this.isPaused = false;
+      this.retryCount = 0;
+      updateAlwaysListenBtnUI();
+      sfx.playChime('ready');
+      this.startStandbyLoop();
+    }
+
+    disableAlwaysListening() {
+      this.alwaysListening = false;
+      this.isPaused = false;
+      this.abortRecognition();
+      updateAlwaysListenBtnUI();
+      setSystemVoiceState('disabled');
+      $('chatHeadline').textContent = 'Always-listening mode disabled. Click to re-enable.';
+    }
+
+    pauseListening() {
+      if (!this.alwaysListening) return;
+      this.isPaused = true;
+      this.abortRecognition();
+      setSystemVoiceState('paused');
+      updateAlwaysListenBtnUI();
+      $('chatHeadline').textContent = 'Listening paused. Click Resume or say Resume to reactivate.';
+    }
+
+    resumeListening() {
+      if (!this.alwaysListening) {
+        this.enableAlwaysListening();
+        return;
+      }
+      this.isPaused = false;
+      updateAlwaysListenBtnUI();
+      this.startStandbyLoop();
+    }
+
+    pushToTalk() {
+      sfx.init();
+      this.startCommandCaptureSession();
+    }
+
+    toggleMuteVoice() {
+      this.voiceMuted = !this.voiceMuted;
+      if ($('muteVoiceBtn')) {
+        $('muteVoiceText').textContent = this.voiceMuted ? '🔇 VOICE MUTED' : '🔊 VOICE ON';
+      }
+      if (this.voiceMuted && this.synth) {
+        this.synth.cancel();
+      }
+    }
+
+    // Backward-compatibility method for auth screen
+    startListening(purpose = 'chat') {
+      if (purpose === 'auth') {
+        if (!this.SpeechRecClass) {
+          handleSpeechError('unsupported', purpose);
+          return;
+        }
+        this.abortRecognition();
+        try {
+          const rec = new this.SpeechRecClass();
+          this.recognition = rec;
+          rec.lang = 'en-IN';
+          rec.continuous = false;
+          rec.interimResults = false;
+          rec.maxAlternatives = 3;
+
+          rec.onstart = () => {
+            setSystemVoiceState('capturing_command');
+            sfx.playChime('listen_start');
+            updateAuthStatus('LISTENING FOR PASSPHRASE… SAY “PRAT”', 'listening');
+          };
+
+          rec.onresult = (event) => {
+            if (!event.results || !event.results[0]) return;
+            const transcript = event.results[0][0].transcript.trim();
+            handleAuthResult(transcript);
+          };
+
+          rec.onerror = (event) => {
+            setSystemVoiceState('error');
+            handleSpeechError(event.error, 'auth');
+          };
+
+          rec.onend = () => {
+            this.recognition = null;
+            if (!state.authorized) {
+              setSystemVoiceState('disabled');
+              updateAuthStatus('VOICE SESSION CLOSED · SELECT RETRY', 'idle');
+              $('retryVoiceBtn').hidden = false;
+            }
+          };
+
+          rec.start();
+        } catch (err) {
+          setSystemVoiceState('error');
+          handleSpeechError('initialization-failed', 'auth');
+        }
+      } else {
+        this.startCommandCaptureSession();
       }
     }
 
     stopListening() {
-      if (this.recognition) {
-        try {
-          this.recognition.stop();
-        } catch (_) {}
-        this.recognition = null;
-      }
-      setSystemVoiceState('idle');
+      this.abortRecognition();
+      setSystemVoiceState('disabled');
     }
   }
 
-  const speechEngine = new SpeechEngine();
+  const veraVoiceEngine = new VeraVoiceEngine();
+  const speechEngine = veraVoiceEngine; // Backward compatibility
+  window.veraVoiceEngine = veraVoiceEngine;
 
   // --- STATE MACHINE UI UPDATE ---
   function setSystemVoiceState(newState) {
@@ -332,31 +724,153 @@
     const authOrb = $('authVoiceOrb');
     const stageWave = $('radialWaveform');
     const consoleWave = $('voiceActivityWave');
+    const micIndicator = $('micStatusIndicator');
+    const micLabel = $('micStatusLabel');
+    const chatDot = $('chatStatusDot');
 
-    if (label) label.textContent = newState.toUpperCase();
-    if (holoState) holoState.textContent = newState.toUpperCase();
-    if (consoleStatus) consoleStatus.textContent = `CORE ${newState.toUpperCase()}`;
+    const stateDisplayNames = {
+      disabled: 'DISABLED',
+      requesting_permission: 'REQUESTING PERMISSION',
+      initializing: 'INITIALIZING',
+      standby: 'STANDBY / WAKE-WORD ACTIVE',
+      wake_detected: 'WAKE WORD DETECTED',
+      acknowledging: 'ACKNOWLEDGING',
+      capturing_command: 'CAPTURING COMMAND',
+      transcribing: 'TRANSCRIBING',
+      processing: 'PROCESSING',
+      speaking: 'SPEAKING',
+      paused: 'PAUSED',
+      recovering: 'RECOVERING',
+      permission_denied: 'PERMISSION DENIED',
+      unsupported: 'UNSUPPORTED',
+      error: 'ERROR'
+    };
 
-    // Reset classes
+    const displayText = stateDisplayNames[newState] || newState.toUpperCase();
+
+    if (badge) badge.textContent = displayText;
+    if (label) label.textContent = displayText;
+    if (holoState) holoState.textContent = displayText;
+    if (consoleStatus) consoleStatus.textContent = displayText;
+
+    // Reset visual classes
     [consoleOrb, authOrb, stageWave, consoleWave].forEach(el => {
       if (!el) return;
-      el.classList.remove('listening', 'speaking', 'processing', 'error');
+      el.classList.remove('standby', 'wake_detected', 'capturing_command', 'listening', 'speaking', 'processing', 'paused', 'error');
     });
 
-    if (newState === 'listening') {
-      if (consoleOrb) consoleOrb.classList.add('listening');
-      if (authOrb) authOrb.classList.add('listening');
-      if (badge) badge.style.borderColor = 'var(--cyan-telemetry)';
-    } else if (newState === 'speaking') {
-      if (consoleOrb) consoleOrb.classList.add('speaking');
-      if (stageWave) stageWave.classList.add('speaking');
-      if (consoleWave) consoleWave.classList.add('speaking');
-      if (badge) badge.style.borderColor = 'var(--gold-primary)';
-    } else if (newState === 'error') {
-      if (consoleOrb) consoleOrb.classList.add('error');
-      if (badge) badge.style.borderColor = 'var(--red-error)';
-    } else {
-      if (badge) badge.style.borderColor = 'var(--border-dim)';
+    if (micIndicator) {
+      micIndicator.classList.remove('active', 'capturing', 'paused', 'error');
+    }
+
+    if (chatDot) {
+      chatDot.classList.remove('green', 'amber', 'cyan');
+    }
+
+    switch (newState) {
+      case 'standby':
+        if (consoleOrb) consoleOrb.classList.add('standby');
+        if (micIndicator) micIndicator.classList.add('active');
+        if (micLabel) micLabel.textContent = 'MIC: ACTIVE · SAY “VERA”';
+        if (badge) badge.style.borderColor = 'var(--cyan-telemetry)';
+        if (chatDot) chatDot.classList.add('green');
+        break;
+      case 'wake_detected':
+        if (consoleOrb) consoleOrb.classList.add('wake_detected');
+        if (micIndicator) micIndicator.classList.add('capturing');
+        if (micLabel) micLabel.textContent = 'WAKE DETECTED // ACKNOWLEDGING';
+        if (badge) badge.style.borderColor = 'var(--gold-primary)';
+        if (chatDot) chatDot.classList.add('amber');
+        break;
+      case 'acknowledging':
+      case 'speaking':
+        if (consoleOrb) consoleOrb.classList.add('speaking');
+        if (stageWave) stageWave.classList.add('speaking');
+        if (consoleWave) consoleWave.classList.add('speaking');
+        if (micLabel) micLabel.textContent = 'MIC: MUTED DURING SPEECH';
+        if (badge) badge.style.borderColor = 'var(--gold-primary)';
+        if (chatDot) chatDot.classList.add('amber');
+        break;
+      case 'capturing_command':
+      case 'listening':
+        if (consoleOrb) consoleOrb.classList.add('capturing_command');
+        if (authOrb) authOrb.classList.add('listening');
+        if (micIndicator) micIndicator.classList.add('capturing');
+        if (micLabel) micLabel.textContent = 'MIC: CAPTURING COMMAND...';
+        if (badge) badge.style.borderColor = 'var(--gold-primary)';
+        if (chatDot) chatDot.classList.add('cyan');
+        break;
+      case 'transcribing':
+      case 'processing':
+        if (consoleOrb) consoleOrb.classList.add('processing');
+        if (micLabel) micLabel.textContent = 'PROCESSING RECONNAISSANCE...';
+        if (badge) badge.style.borderColor = 'var(--cyan-telemetry)';
+        if (chatDot) chatDot.classList.add('cyan');
+        break;
+      case 'paused':
+        if (consoleOrb) consoleOrb.classList.add('paused');
+        if (micIndicator) micIndicator.classList.add('paused');
+        if (micLabel) micLabel.textContent = 'MIC: PAUSED';
+        if (badge) badge.style.borderColor = 'var(--amber-warning)';
+        if (chatDot) chatDot.classList.add('amber');
+        break;
+      case 'recovering':
+        if (consoleOrb) consoleOrb.classList.add('standby');
+        if (micIndicator) micIndicator.classList.add('paused');
+        if (micLabel) micLabel.textContent = 'RECOVERING RECOGNITION...';
+        if (badge) badge.style.borderColor = 'var(--amber-warning)';
+        break;
+      case 'permission_denied':
+        if (consoleOrb) consoleOrb.classList.add('error');
+        if (micIndicator) micIndicator.classList.add('error');
+        if (micLabel) micLabel.textContent = 'MIC: PERMISSION DENIED';
+        if (badge) badge.style.borderColor = 'var(--red-error)';
+        break;
+      case 'unsupported':
+        if (consoleOrb) consoleOrb.classList.add('error');
+        if (micIndicator) micIndicator.classList.add('error');
+        if (micLabel) micLabel.textContent = 'MIC: BROWSER UNSUPPORTED';
+        if (badge) badge.style.borderColor = 'var(--red-error)';
+        break;
+      case 'error':
+        if (consoleOrb) consoleOrb.classList.add('error');
+        if (micIndicator) micIndicator.classList.add('error');
+        if (micLabel) micLabel.textContent = 'MIC: ERROR';
+        if (badge) badge.style.borderColor = 'var(--red-error)';
+        break;
+      case 'disabled':
+      default:
+        if (micLabel) micLabel.textContent = 'MIC: STANDBY (CLICK TO START)';
+        if (badge) badge.style.borderColor = 'var(--border-dim)';
+        if (chatDot) chatDot.classList.add('green');
+        break;
+    }
+  }
+
+  function updateAlwaysListenBtnUI() {
+    const btn = $('alwaysListenToggleBtn');
+    const icon = $('alwaysListenIcon');
+    const text = $('alwaysListenText');
+    const pauseBtn = $('pauseListenBtn');
+    const pauseText = $('pauseListenText');
+
+    if (btn) {
+      if (veraVoiceEngine.alwaysListening) {
+        btn.classList.add('active');
+        if (icon) icon.textContent = '⏹';
+        if (text) text.textContent = 'STOP ALWAYS LISTENING';
+      } else {
+        btn.classList.remove('active');
+        if (icon) icon.textContent = '◉';
+        if (text) text.textContent = 'ENABLE ALWAYS LISTENING';
+      }
+    }
+
+    if (pauseBtn) {
+      pauseBtn.disabled = !veraVoiceEngine.alwaysListening;
+      if (pauseText) {
+        pauseText.textContent = veraVoiceEngine.isPaused ? '▶ RESUME' : '⏸ PAUSE';
+      }
     }
   }
 
@@ -397,7 +911,7 @@
 
       updateAuthStatus('AUTHORIZATION ACCEPTED // WELCOME ABOARD', 'success');
       
-      const welcomeSpoken = "Passphrase accepted. Welcome aboard. I'm V.E.R.A., your composed and observant engineering guide. Systems are calibrated and ready.";
+      const welcomeSpoken = "Passphrase accepted. Welcome aboard. I'm Vera, your composed and observant engineering guide. Systems are calibrated and ready.";
       speechEngine.speak(welcomeSpoken);
 
       // Add to conversation feed
@@ -587,7 +1101,7 @@
               <span>CLASSIFIED: PUBLIC</span>
             </div>
             <div class="project-actions">
-              <button class="btn btn-xs btn-primary brief-btn" data-repo="${repo.name}">ASK V.E.R.A. ↗</button>
+              <button class="btn btn-xs btn-primary brief-btn" data-repo="${repo.name}">ASK VERA ↗</button>
               <button class="btn btn-xs btn-secondary arch-btn" data-repo="${repo.name}">ARCHITECTURE ⌁</button>
               <a href="${repo.html_url}" target="_blank" rel="noopener" class="btn btn-xs btn-ghost">GITHUB ↗</a>
               ${demoBtn}
@@ -599,7 +1113,10 @@
 
     // Attach button events
     grid.querySelectorAll('.brief-btn').forEach(btn => {
-      btn.addEventListener('click', () => conductProjectBriefing(btn.dataset.repo));
+      btn.addEventListener('click', () => {
+        state.activeRepo = btn.dataset.repo;
+        conductProjectBriefing(btn.dataset.repo);
+      });
     });
     grid.querySelectorAll('.arch-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -785,6 +1302,7 @@
     }
 
     const clean = repoName.split('/').pop().toLowerCase();
+    state.activeRepo = clean;
     $('core').scrollIntoView({ behavior: 'smooth' });
 
     let spoken = '';
@@ -799,7 +1317,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: `Provide an engineering briefing for ${clean}`,
-            current_repo: clean
+            current_repo: clean,
+            caller_role: state.callerRole || 'guest'
           })
         });
         if (res.ok) {
@@ -834,8 +1353,8 @@
     const text = userText.trim();
 
     addMessageToFeed('user', text);
-    $('chatHeadline').textContent = 'V.E.R.A. is analyzing...';
-    setSystemVoiceState('thinking');
+    $('chatHeadline').textContent = 'Vera is analyzing...';
+    setSystemVoiceState('processing');
 
     // Check backend
     if (state.backendOnline) {
@@ -846,7 +1365,8 @@
           body: JSON.stringify({
             message: text,
             history: state.conversationHistory.slice(-6),
-            current_repo: state.activeRepo
+            current_repo: state.activeRepo,
+            caller_role: state.callerRole || 'guest'
           })
         });
         if (res.ok) {
@@ -868,9 +1388,36 @@
     const lower = text.toLowerCase();
     let replySpoken = '';
     let replyDisplay = '';
-    let title = 'V.E.R.A. Intelligence';
+    let title = 'Vera Intelligence';
 
-    if (lower.includes('brandforge')) {
+    // 1. Identity / Name Question
+    if (lower.includes('what is your name') || lower.includes("what's your name") || lower.includes('who are you') || lower.includes('what are you called')) {
+      replySpoken = "I'm Vera. I assist with technical questions, explore projects, and help you find what you need.";
+      replyDisplay = "### Vera // Personal Engineering Intelligence\n- **Identity**: Vera (pronounced *VEER-uh*)\n- **Operator**: Prathmesh Mante (`prathmeshmante-glitch`)\n- **Directives**: Hands-free voice reconnaissance, architecture inspection, and engineering briefings.";
+      title = 'Vera // Identity';
+    } 
+    // 2. Comparison: BrandForge vs InkLoom
+    else if ((lower.includes('compare') || lower.includes('vs') || lower.includes('versus') || lower.includes('difference')) && (lower.includes('brandforge') || lower.includes('inkloom'))) {
+      replySpoken = "Comparing BrandForge and InkLoom. BrandForge is a distributed brand intelligence workspace using Next.js and LangGraph agent pipelines, while InkLoom specializes in mathematical vector geometry and generative logo synthesis.";
+      replyDisplay = "### Architectural Comparison // BrandForge vs InkLoom\n- **BrandForge**: Next.js (TypeScript) + FastAPI + LangGraph stateful agent cycles + Supabase.\n- **InkLoom**: Specialized generative geometry models, SVG vector engine, and clear-space algorithmic constraints.\n- **Trade-off**: Stateful graph cycles vs mathematical vector rule enforcement.";
+      title = 'Vera // Project Comparison';
+    }
+    // 3. Contextual Reference to Active Repository
+    else if (lower.includes('this repository') || lower.includes('this repo') || lower.includes('this project') || lower.includes('its backend') || lower.includes('its architecture')) {
+      if (state.activeRepo) {
+        const repoObj = state.repositories.find(r => r.name.toLowerCase() === state.activeRepo.toLowerCase());
+        const lang = repoObj ? (repoObj.language || 'modern') : 'modern';
+        replySpoken = `Reviewing ${state.activeRepo}. Built on a ${lang} stack with verified components in public repositories.`;
+        replyDisplay = `### Active Repository Inspection: ${state.activeRepo}\n- **Context**: Currently selected repository from Mission Archive.\n- **Primary Stack**: ${lang}\n- **Full Source**: [GitHub Repository](https://github.com/prathmeshmante-glitch/${state.activeRepo})`;
+        title = `Inspection // ${state.activeRepo.toUpperCase()}`;
+      } else {
+        replySpoken = "Which project would you like me to inspect? You can choose BrandForge or InkLoom, or select one from the Mission Archive.";
+        replyDisplay = "### Target Selection Required\nPlease select BrandForge or InkLoom, or click a mission in the archive.";
+        title = 'Vera // Awaiting Target';
+      }
+    }
+    // 4. Specific Projects
+    else if (lower.includes('brandforge')) {
       replySpoken = 'BrandForge is an AI brand-intelligence workspace built with Next.js, FastAPI, LangGraph, and Supabase. It coordinates agentic workflows to produce structured product strategy.';
       replyDisplay = '### BrandForge Engineering Review\n- **Client**: Next.js & TypeScript UI with optimistic canvas updates.\n- **Agents**: LangGraph graph workflows translating brand inputs into design constraints.\n- **Storage**: Supabase PostgreSQL persistence.\n- **Live Production URL**: [brandforge-jade.vercel.app](https://brandforge-jade.vercel.app)';
       title = 'BrandForge // Analysis';
@@ -888,7 +1435,7 @@
       title = 'Senior Engineering Review';
     } else {
       replySpoken = `Query acknowledged. I am tracking ${state.repositories.length} public engineering repositories for operator Prathmesh Mante. Would you like a briefing on BrandForge or InkLoom?`;
-      replyDisplay = `### V.E.R.A. Standing By\nI analyzed your inquiry: *"${text}"*.\n\nYou can ask about:\n- **Specific Projects**: "Explain BrandForge", "What is InkLoom?"\n- **Architecture**: "How does the backend interact with the frontend?"\n- **Deployment**: "How would I run this project locally?"`;
+      replyDisplay = `### Vera Standing By\nI analyzed your inquiry: *"${text}"*.\n\nYou can ask about:\n- **Specific Projects**: "Explain BrandForge", "What is InkLoom?"\n- **Architecture**: "How does the backend interact with the frontend?"\n- **Comparison**: "Compare BrandForge and InkLoom."`;
     }
 
     addMessageToFeed('assistant', replySpoken, { title, rawDisplay: replyDisplay });
@@ -908,7 +1455,7 @@
     entry.className = `feed-entry ${role}-entry`;
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const badge = role === 'assistant' ? 'V.E.R.A.' : 'OPERATOR';
+    const badge = role === 'assistant' ? 'Vera' : 'OPERATOR';
 
     let contentHtml = '';
     if (role === 'assistant') {
@@ -1116,7 +1663,7 @@
           return;
         }
         $('core').scrollIntoView({ behavior: 'smooth' });
-        speechEngine.speak("V.E.R.A. online. What shall we inspect?");
+        speechEngine.speak("Vera online. What shall we inspect?");
       });
     }
 
@@ -1145,17 +1692,61 @@
       speechEngine.speak(text);
     }
 
-    // 6. Core Voice Controls
+    // 6. Hands-Free & Always-Listening Voice Controls
+    const alwaysListenBtn = $('alwaysListenToggleBtn');
+    if (alwaysListenBtn) {
+      alwaysListenBtn.addEventListener('click', () => {
+        sfx.init();
+        if (veraVoiceEngine.alwaysListening) {
+          veraVoiceEngine.disableAlwaysListening();
+        } else {
+          veraVoiceEngine.enableAlwaysListening();
+        }
+      });
+    }
+
+    const pauseListenBtn = $('pauseListenBtn');
+    if (pauseListenBtn) {
+      pauseListenBtn.addEventListener('click', () => {
+        sfx.init();
+        if (veraVoiceEngine.isPaused) {
+          veraVoiceEngine.resumeListening();
+        } else {
+          veraVoiceEngine.pauseListening();
+        }
+      });
+    }
+
+    const pushToTalkBtn = $('pushToTalkBtn');
+    if (pushToTalkBtn) {
+      pushToTalkBtn.addEventListener('click', () => {
+        sfx.init();
+        veraVoiceEngine.pushToTalk();
+      });
+    }
+
+    const interruptSpeechBtn = $('interruptSpeechBtn');
+    if (interruptSpeechBtn) {
+      interruptSpeechBtn.addEventListener('click', () => {
+        veraVoiceEngine.stopSpeaking();
+      });
+    }
+
+    const muteVoiceBtn = $('muteVoiceBtn');
+    if (muteVoiceBtn) {
+      muteVoiceBtn.addEventListener('click', () => {
+        veraVoiceEngine.toggleMuteVoice();
+      });
+    }
+
     const toggleVoiceBtn = $('toggleVoiceBtn');
     if (toggleVoiceBtn) {
       toggleVoiceBtn.addEventListener('click', () => {
         sfx.init();
-        if (state.voiceState === 'listening') {
-          speechEngine.stopListening();
-          $('voiceBtnText').textContent = 'START VOICE';
+        if (state.voiceState === 'capturing_command' || state.voiceState === 'listening') {
+          veraVoiceEngine.stopListening();
         } else {
-          speechEngine.startListening('chat');
-          $('voiceBtnText').textContent = 'LISTENING...';
+          veraVoiceEngine.pushToTalk();
         }
       });
     }
@@ -1163,7 +1754,7 @@
     const stopSpeechBtn = $('stopSpeechBtn');
     if (stopSpeechBtn) {
       stopSpeechBtn.addEventListener('click', () => {
-        speechEngine.stopSpeaking();
+        veraVoiceEngine.stopSpeaking();
       });
     }
 
@@ -1171,7 +1762,7 @@
     if (repeatSpeechBtn) {
       repeatSpeechBtn.addEventListener('click', () => {
         if (state.lastAssistantReply) {
-          speechEngine.speak(state.lastAssistantReply);
+          veraVoiceEngine.speak(state.lastAssistantReply);
         }
       });
     }

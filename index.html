@@ -239,34 +239,54 @@
           </div>
           <div class="section-meta">
             <span class="live-badge" id="coreEngineBadge">AI GROUNDED ENGINE</span>
+            <span class="live-badge voice-state-badge" id="voiceStateBadge">STANDBY / WAKE-WORD ACTIVE</span>
           </div>
         </div>
 
         <div class="core-console panel">
           <!-- Voice Orb & Visualizer Column -->
           <div class="console-visual-col">
-            <div class="console-orb" id="consoleOrb">
+            <div class="console-orb standby" id="consoleOrb">
               <div class="orb-ring outer"></div>
               <div class="orb-ring inner"></div>
               <div class="orb-sigil">V</div>
               <div class="orb-pulse"></div>
             </div>
-            <div class="orb-status-text" id="consoleOrbStatus">CORE STANDBY</div>
+            <div class="orb-status-text" id="consoleOrbStatus">STANDBY / WAKE-WORD ACTIVE</div>
             
             <div class="voice-activity-wave" id="voiceActivityWave">
               <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
             </div>
 
-            <div class="voice-mode-controls">
-              <button class="btn btn-sm btn-primary" id="toggleVoiceBtn">
-                <span id="voiceBtnIcon">◉</span> <span id="voiceBtnText">START VOICE</span>
+            <!-- Always-Listening Hands-Free Controls -->
+            <div class="always-listen-panel">
+              <button class="btn btn-sm btn-primary always-listen-btn" id="alwaysListenToggleBtn">
+                <span id="alwaysListenIcon">◉</span> <span id="alwaysListenText">ENABLE ALWAYS LISTENING</span>
               </button>
-              <button class="btn btn-sm btn-outline" id="stopSpeechBtn" disabled>
-                <span>■ MUTE / STOP</span>
-              </button>
-              <button class="btn btn-sm btn-ghost" id="repeatSpeechBtn">
-                <span>↺ REPEAT</span>
-              </button>
+              
+              <div class="voice-sub-controls">
+                <button class="btn btn-xs btn-outline" id="pauseListenBtn" title="Pause or resume wake-word detection">
+                  <span id="pauseListenText">⏸ PAUSE</span>
+                </button>
+                <button class="btn btn-xs btn-outline" id="pushToTalkBtn" title="Push to talk for manual command capture">
+                  <span>🎙 PUSH TO TALK</span>
+                </button>
+                <button class="btn btn-xs btn-outline" id="interruptSpeechBtn" disabled title="Interrupt speech output immediately">
+                  <span>■ STOP TALKING</span>
+                </button>
+                <button class="btn btn-xs btn-ghost" id="muteVoiceBtn" title="Mute or enable voice responses">
+                  <span id="muteVoiceText">🔊 VOICE ON</span>
+                </button>
+                <button class="btn btn-xs btn-ghost" id="repeatSpeechBtn" title="Repeat last response">
+                  <span>↺ REPEAT</span>
+                </button>
+              </div>
+
+              <!-- Microphone Status & Guidance Indicator -->
+              <div class="mic-status-indicator" id="micStatusIndicator">
+                <span class="mic-status-dot" id="micStatusDot"></span>
+                <span class="mic-status-label" id="micStatusLabel">MIC: STANDBY · SAY “VERA”</span>
+              </div>
             </div>
           </div>
 
@@ -275,7 +295,7 @@
             <div class="chat-header">
               <div class="chat-status-line">
                 <span class="status-dot green" id="chatStatusDot"></span>
-                <span class="chat-headline" id="chatHeadline">Awaiting operator instructions.</span>
+                <span class="chat-headline" id="chatHeadline">Vera is standing by. Speak “Vera” or click to start.</span>
               </div>
               <div class="chat-actions">
                 <button class="text-link-btn" id="clearChatBtn" title="Clear conversation history">CLEAR CONVERSATION</button>
@@ -286,12 +306,12 @@
             <div class="conversation-feed" id="conversationFeed" role="log" aria-live="polite">
               <div class="feed-entry assistant-entry">
                 <div class="entry-meta">
-                  <span class="entry-badge">V.E.R.A.</span>
+                  <span class="entry-badge">Vera</span>
                   <span class="entry-time" id="welcomeTimestamp">JUST NOW</span>
                 </div>
                 <div class="entry-content">
                   <p class="spoken-summary">
-                    “Core systems are online. Good day. I am V.E.R.A., systems engineering intelligence for Prathmesh Mante. Shall we examine the mission archive?”
+                    “Core systems are online. Hello. I’m Vera, your voice-enabled AI assistant. It’s a pleasure to meet you. Enable always-listening mode and say ‘Vera’ to issue hands-free commands.”
                   </p>
                   <div class="entry-technical-details">
                     <p>
@@ -795,11 +815,11 @@
       </div>
 
       <div class="welcome-eyebrow">OPERATOR PASS-GATE // CEREMONIAL VOICE ENTRY</div>
-      <h2 id="welcomeTitle">V.E.R.A. ONLINE</h2>
+      <h2 id="welcomeTitle">VERA ONLINE</h2>
       
       <p id="welcomeText" class="welcome-desc">
-        Boss is currently away. I can guide you through the public engineering archive. 
-        To enter the command deck, activate the voice link and speak the passphrase when prompted.
+        Hello. I’m Vera, your voice-enabled AI assistant. It’s a pleasure to meet you. 
+        To unlock the command deck, activate the voice link and speak the passphrase “Prat” when prompted.
       </p>
 
       <!-- Reactive Voice Orb -->

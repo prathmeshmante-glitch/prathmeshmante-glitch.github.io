@@ -966,6 +966,127 @@ button {
   width: 100%;
 }
 
+/* ALWAYS LISTENING PANEL & HANDS-FREE CONTROLS */
+.always-listen-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.always-listen-btn {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.always-listen-btn.active {
+  background: var(--gold-primary);
+  color: #080a0f;
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 18px var(--gold-glow);
+  font-weight: 700;
+}
+
+.voice-sub-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+
+.voice-sub-controls .btn-xs {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.mic-status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-line);
+  background: rgba(8, 10, 15, 0.6);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.mic-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+  transition: all 0.3s;
+}
+
+.mic-status-indicator.active .mic-status-dot {
+  background: var(--cyan-telemetry);
+  box-shadow: 0 0 8px var(--cyan-telemetry);
+  animation: pulseMic 1.4s infinite;
+}
+
+.mic-status-indicator.capturing .mic-status-dot {
+  background: var(--gold-primary);
+  box-shadow: 0 0 10px var(--gold-primary);
+  animation: pulseMic 0.8s infinite;
+}
+
+.mic-status-indicator.paused .mic-status-dot {
+  background: var(--amber-warning);
+}
+
+.mic-status-indicator.error .mic-status-dot {
+  background: var(--red-error);
+}
+
+@keyframes pulseMic {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Voice State Badge */
+.voice-state-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  transition: all 0.25s ease;
+}
+
+.console-orb.standby {
+  border-color: var(--cyan-telemetry);
+  box-shadow: 0 0 25px rgba(102, 217, 232, 0.3);
+  animation: orbStandbyBreathe 3.5s ease-in-out infinite;
+}
+
+.console-orb.wake_detected {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 50px var(--gold-bright), inset 0 0 30px var(--gold-bright);
+  transform: scale(1.05);
+}
+
+.console-orb.capturing_command {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 35px var(--gold-glow);
+  animation: orbListenPulse 0.9s infinite alternate;
+}
+
+@keyframes orbStandbyBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; }
+}
+
 /* Console Chat Column */
 .console-chat-col {
   display: flex;
