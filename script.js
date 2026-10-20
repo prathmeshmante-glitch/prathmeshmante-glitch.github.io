@@ -417,7 +417,7 @@
     } else {
       sfx.playChime('auth_error');
       $('welcomeTitle').textContent = 'AUTHORIZATION FAILED';
-      $('authErrorMsg').textContent = `I captured: “\${transcript}”. Say “Open the command deck” clearly, or just “command deck”, and try again.`;
+      $('authErrorMsg').textContent = `I captured: “${transcript}”. Say “Open the command deck” clearly, or just “command deck”, and try again.`;
       updateAuthStatus('AUTHENTICATION REJECTED · RETRY READY', 'error');
       $('retryVoiceBtn').hidden = false;
       $('beginVoiceBtnText').textContent = 'RETRY VOICE AUTHORIZATION ↗';
