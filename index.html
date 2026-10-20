@@ -1,98 +1,17 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#050a14" />
-  <meta name="description" content="AURA — Prathmesh Mante's futuristic developer command center." />
-  <title>AURA // Prathmesh Mante</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="scanlines" aria-hidden="true"></div>
-  <header class="topbar">
-    <a class="brand" href="#home"><span class="brand-mark">A</span><span>AURA <small>PERSONAL INTELLIGENCE SYSTEM</small></span></a>
-    <div class="system-state"><i></i> SYSTEM NOMINAL <span id="clock">--:--:--</span></div>
-  </header>
-
-  <div class="layout" id="home">
-    <aside class="sidebar">
-      <div class="side-label">NAVIGATION / 01</div>
-      <a class="nav active" href="#home">⌂ <span>Command Center</span></a>
-      <a class="nav" href="#missions">◈ <span>Mission Files</span></a>
-      <a class="nav" href="#stack">⌘ <span>Technology Matrix</span></a>
-      <a class="nav" href="#assistant">◎ <span>Voice Interface</span></a>
-      <div class="side-note"><span class="tiny-dot"></span> PERSONAL SYSTEM<br/><b>BUILD 0.1.0</b></div>
-    </aside>
-
-    <main>
-      <section class="hero panel">
-        <div class="hero-copy">
-          <p class="eyebrow">IDENTITY SCAN // VERIFIED DEVELOPER</p>
-          <h1>PRATHMESH<br/><span>MANTE</span></h1>
-          <p class="role">COMPUTER SCIENCE ENGINEERING · BUILDER OF SYSTEMS</p>
-          <p class="intro">Exploring the frontier between intelligent software, connected systems, and human-centered engineering.</p>
-          <div class="actions">
-            <a class="button primary" href="#missions">EXPLORE MISSIONS <b>↗</b></a>
-            <button class="button" id="voiceHero">◉ TALK TO AURA</button>
-          </div>
-          <div class="hero-tags"><span>AI / AGENTS</span><span>FULL STACK</span><span>NETWORKS / SECURITY</span></div>
-        </div>
-        <div class="holo-stage">
-          <div class="holo-grid"></div>
-          <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit orbit-c"></div>
-          <div class="holo-core"><div class="core-inner">A<span>✦</span></div></div>
-          <div class="holo-label label-top">AURA CORE / 001</div>
-          <div class="holo-label label-bottom">NEURAL INTERFACE STANDBY</div>
-          <div class="crosshair">+</div>
-        </div>
-        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-      </section>
-
-      <section class="metrics">
-        <article class="metric panel"><span class="eyebrow">01 / MODE</span><strong>ENGINEER</strong><small>Learn · Build · Iterate</small></article>
-        <article class="metric panel"><span class="eyebrow">02 / FOCUS</span><strong>AI SYSTEMS</strong><small>Agents and applied intelligence</small></article>
-        <article class="metric panel"><span class="eyebrow">03 / DIRECTIVE</span><strong>MAKE IT REAL</strong><small>From architecture to deployment</small></article>
-      </section>
-
-      <section id="missions" class="section">
-        <div class="section-head"><div><p class="eyebrow">02 / PROJECT ARCHIVE</p><h2>MISSION FILES</h2></div><span class="section-code">3 RECORDS // CLASSIFIED: PUBLIC</span></div>
-        <div class="mission-grid">
-          <article class="mission panel"><div class="mission-id">FILE_001 / OCEAN SYSTEMS</div><div class="mission-symbol">◉</div><h3>ORCA</h3><p>Marine ecosystem intelligence and environmental reasoning, designed to turn Earth-observation signals into useful insight.</p><div class="chips"><span>FASTAPI</span><span>REACT</span><span>AI AGENTS</span></div><a href="https://github.com/prathmeshmante-glitch" target="_blank" rel="noreferrer">INSPECT REPOSITORIES ↗</a></article>
-          <article class="mission panel"><div class="mission-id">FILE_002 / SOCIAL IMPACT</div><div class="mission-symbol amber">◇</div><h3>KALA SARTHI</h3><p>AI-assisted cataloging and market-linkage workflows for marginalized artisans and their products.</p><div class="chips"><span>REACT NATIVE</span><span>PYTHON</span><span>AI</span></div><a href="https://github.com/prathmeshmante-glitch" target="_blank" rel="noreferrer">INSPECT REPOSITORIES ↗</a></article>
-          <article class="mission panel"><div class="mission-id">FILE_003 / AGENT SYSTEMS</div><div class="mission-symbol violet">⌘</div><h3>BRANDFORGE</h3><p>An AI brand-intelligence workspace exploring agent workflows, product strategy, and structured outputs.</p><div class="chips"><span>NEXT.JS</span><span>LANGGRAPH</span><span>SUPABASE</span></div><a href="https://github.com/prathmeshmante-glitch" target="_blank" rel="noreferrer">INSPECT REPOSITORIES ↗</a></article>
-        </div>
-      </section>
-
-      <section id="stack" class="section">
-        <div class="section-head"><div><p class="eyebrow">03 / CAPABILITY MATRIX</p><h2>TECHNOLOGY MATRIX</h2></div><span class="section-code">CONTINUOUSLY EVOLVING</span></div>
-        <div class="stack panel">
-          <div class="stack-item"><span>C++</span><div class="track"><i style="width:78%"></i></div><b>DSA</b></div>
-          <div class="stack-item"><span>PYTHON</span><div class="track"><i style="width:72%"></i></div><b>AI / API</b></div>
-          <div class="stack-item"><span>REACT</span><div class="track"><i style="width:70%"></i></div><b>UI</b></div>
-          <div class="stack-item"><span>FASTAPI</span><div class="track"><i style="width:64%"></i></div><b>BACKEND</b></div>
-          <p class="fineprint">Illustrative focus indicators, not measured proficiency scores. Edit these values to reflect your real skills.</p>
-        </div>
-      </section>
-
-      <section id="assistant" class="section">
-        <div class="section-head"><div><p class="eyebrow">04 / NATURAL INTERFACE</p><h2>VOICE LINK</h2></div><span class="section-code">MICROPHONE PERMISSION REQUIRED</span></div>
-        <div class="assistant panel">
-          <div class="assistant-core" id="assistantCore"><span>A</span><i></i><b></b></div>
-          <div class="assistant-copy">
-            <p class="eyebrow">AURA PERSONAL ASSISTANT</p>
-            <h3 id="assistantStatus">Awaiting your command.</h3>
-            <p id="assistantReply">Start with the voice button to try browser speech recognition and spoken responses. Connect the optional secure realtime backend for a true conversational AI.</p>
-            <div class="assistant-actions"><button class="button primary" id="startVoice">◉ START VOICE</button><button class="button" id="stopVoice" disabled>■ STOP</button></div>
-            <div class="transcript"><span>INPUT TRANSCRIPT</span><p id="transcript">No input captured.</p></div>
-            <p class="fineprint">Prototype mode uses browser speech features when available. Realtime AI requires a configured backend and API key; do not put secret keys in this static website.</p>
-          </div>
-        </div>
-      </section>
-
-      <footer class="footer"><span>AURA / PERSONAL INTELLIGENCE SYSTEM</span><span>DESIGNED TO EXPLORE. BUILT TO EVOLVE.</span><a href="https://github.com/prathmeshmante-glitch">GITHUB ↗</a></footer>
-    </main>
-  </div>
-  <script src="script.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#030811"><meta name="description" content="Prathmesh Mante — personal engineering command deck"><title>PRATHMESH // COMMAND DECK</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="ambient"></div><div class="scanlines"></div>
+<header class="topbar"><a class="wordmark" href="#home"><span class="sigil">P</span><span>PM // COMMAND DECK<small>PERSONAL ENGINEERING INTERFACE</small></span></a><div class="status"><i></i> SYSTEM NOMINAL <span id="clock">--:--:--</span></div></header>
+<div class="layout" id="home"><aside class="sidebar"><div class="section-label">INTERFACE / NAV-01</div><a class="nav active" href="#home"><b>⌂</b> Overview</a><a class="nav" href="#projects"><b>⌁</b> Project files</a><a class="nav" href="#capabilities"><b>◈</b> Capabilities</a><a class="nav" href="#assistant"><b>◉</b> Voice channel</a><div class="side-bottom"><i></i> OPERATOR: PRATHMESH<br><span>PUBLIC PROFILE MODE</span></div></aside>
+<main><section class="hero panel"><div class="hero-copy"><p class="eyebrow"><span class="live-dot"></span> IDENTITY FILE / OPERATOR 001</p><h1>PRATHMESH<br><em>MANTE</em></h1><p class="role">COMPUTER SCIENCE ENGINEERING · SYSTEMS BUILDER</p><p class="intro">I build at the intersection of intelligent software, connected systems, and ambitious engineering.</p><div class="buttons"><a class="btn hot" href="#projects">OPEN PROJECT FILES <b>↗</b></a><button class="btn" id="greetBtn">◉ ESTABLISH VOICE LINK</button></div><div class="tags"><span>AI / AGENTS</span><span>FULL STACK</span><span>NETWORKS / SECURITY</span></div></div>
+<div class="holo"><div class="radar"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="portrait-frame"><div class="portrait-placeholder"><span class="head">◉</span><span class="shoulders"></span><span class="scanline"></span><b>OPERATOR<br>IMAGE PENDING</b></div></div><div class="orbit-dot od1"></div><div class="orbit-dot od2"></div><div class="orbit-dot od3"></div><div class="callout c1">HOLOGRAPHIC ARRAY <b>ACTIVE</b></div><div class="callout c2">NEURAL CORE <b>STANDBY</b></div><div class="target">+</div></div><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div></section>
+<section class="telemetry"><article class="metric panel"><span>01 / DIRECTIVE</span><strong>BUILD</strong><small>From prototype to product</small></article><article class="metric panel"><span>02 / INTEREST</span><strong>INTELLIGENCE</strong><small>AI agents and connected systems</small></article><article class="metric panel"><span>03 / PROTOCOL</span><strong>ITERATE</strong><small>Test · Learn · Improve</small></article></section>
+<section id="projects" class="block"><div class="block-head"><div><p class="eyebrow">02 / PROJECT ARCHIVE</p><h2>MISSION FILES</h2></div><span>PUBLIC RECORDS / 03</span></div><div class="projects">
+<article class="project panel"><div class="file-id">FILE_001 / OCEAN SYSTEMS</div><div class="project-icon">◉</div><h3>ORCA</h3><p>Marine ecosystem intelligence and environmental reasoning, designed to turn Earth-observation signals into useful insight.</p><div class="chips"><i>FASTAPI</i><i>REACT</i><i>AI AGENTS</i></div><a href="https://github.com/prathmeshmante-glitch?tab=repositories">OPEN REPOSITORIES ↗</a></article>
+<article class="project panel"><div class="file-id">FILE_002 / SOCIAL IMPACT</div><div class="project-icon amber">◇</div><h3>KALA SARTHI</h3><p>AI-assisted cataloging and market-linkage workflows for artisans and their products.</p><div class="chips"><i>REACT NATIVE</i><i>PYTHON</i><i>AI</i></div><a href="https://github.com/prathmeshmante-glitch?tab=repositories">OPEN REPOSITORIES ↗</a></article>
+<article class="project panel"><div class="file-id">FILE_003 / AGENT SYSTEMS</div><div class="project-icon violet">⌘</div><h3>BRANDFORGE</h3><p>An AI brand-intelligence workspace exploring agent workflows, product strategy, and structured outputs.</p><div class="chips"><i>NEXT.JS</i><i>LANGGRAPH</i><i>SUPABASE</i></div><a href="https://github.com/prathmeshmante-glitch?tab=repositories">OPEN REPOSITORIES ↗</a></article></div></section>
+<section id="capabilities" class="block"><div class="block-head"><div><p class="eyebrow">03 / CAPABILITY MATRIX</p><h2>TECH SYSTEMS</h2></div><span>CONTINUOUSLY EVOLVING</span></div><div class="capabilities panel"><div><span>C++ / DSA</span><i><b style="width:76%"></b></i><small>CORE</small></div><div><span>PYTHON / AI</span><i><b style="width:70%"></b></i><small>BUILDING</small></div><div><span>REACT / WEB</span><i><b style="width:68%"></b></i><small>BUILDING</small></div><div><span>BACKEND / API</span><i><b style="width:62%"></b></i><small>BUILDING</small></div><p>Visual indicators are illustrative. Edit them to accurately reflect your current skills.</p></div></section>
+<section id="assistant" class="block"><div class="block-head"><div><p class="eyebrow">04 / GUEST INTERACTION</p><h2>VOICE CHANNEL</h2></div><span>VOICE PERMISSION REQUIRED</span></div><div class="voice-panel panel"><div class="assistant-visual" id="assistantVisual"><div class="av-ring"></div><div class="av-ring two"></div><div class="av-core">V<span>•</span></div><label>V.E.R.A. / ONLINE</label></div><div class="voice-content"><p class="eyebrow">V.E.R.A. // VOICE-ENABLED RECEPTION ASSISTANT</p><h3 id="voiceTitle">Welcome, visitor.</h3><p id="voiceReply">V.E.R.A. can greet visitors, request the demo passphrase, and guide them through the public profile. Select Enable voice to begin.</p><div class="pass-row"><label for="passphrase">GUEST PASSPHRASE</label><div><input id="passphrase" type="password" placeholder="Enter passphrase" autocomplete="off"><button class="btn hot" id="submitPass">VERIFY</button></div></div><div class="voice-actions"><button class="btn" id="enableVoice">ENABLE FEMALE VOICE</button><button class="btn" id="repeatPrompt">REPEAT INSTRUCTIONS</button><button class="btn" id="stopVoice">MUTE</button></div><div class="log"><span>INTERACTION LOG</span><p id="logLine">Awaiting visitor input…</p></div><p class="warning">DEMO ACCESS ONLY: this passphrase is a playful front-end interaction, not security. Anyone can bypass it or inspect the public source. It does not protect private data or restrict access to public GitHub repositories.</p></div></div></section>
+<footer><span>PM // COMMAND DECK</span><span>INDEPENDENT DESIGN · ENGINEERING INSPIRED</span><a href="https://github.com/prathmeshmante-glitch?tab=repositories">PUBLIC REPOSITORIES ↗</a></footer></main></div>
+<div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card panel"><div class="welcome-symbol">V</div><p class="eyebrow">INCOMING VISITOR / CHANNEL OPEN</p><h2>Good day, visitor.</h2><p>Boss is currently away. V.E.R.A. requests the demo passphrase before continuing the guided tour.</p><p class="small">Enable audio to hear the greeting in a feminine system voice. Your browser may require a click before audio can play.</p><button class="btn hot" id="beginVisit">INITIALIZE VISIT <b>↗</b></button><button class="text-btn" id="skipVoice">CONTINUE SILENTLY</button></div></div>
+<script src="script.js"></script></body></html>
