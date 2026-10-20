@@ -1,14 +1,852 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090806"><meta name="description" content="V.E.R.A. — Prathmesh Mante's voice-first engineering command deck"><title>V.E.R.A. // COMMAND DECK</title><link rel="stylesheet" href="style.css"></head>
-<body><div class="ambient"></div><div class="scanlines"></div>
-<header class="topbar"><a class="wordmark" href="#home"><span class="sigil">V</span><span>V.E.R.A.<small>VOICE-ENABLED RECONNAISSANCE & ASSISTANCE</small></span></a><div class="status"><i></i><span id="systemStatus">CORE STANDBY</span><span id="clock">--:--:--</span></div></header>
-<div class="layout" id="home"><aside class="sidebar"><div class="section-label">COMMAND / NAV-01</div><a class="nav active" href="#home"><b>⌂</b> Command deck</a><a class="nav" href="#projects"><b>⌁</b> Mission archive</a><a class="nav" href="#capabilities"><b>◈</b> Tech intelligence</a><a class="nav" href="#assistant"><b>◉</b> V.E.R.A. core</a><div class="side-bottom"><i></i> OPERATOR: PRATHMESH<br><span>PUBLIC REPOSITORY MODE</span></div></aside>
-<main><section class="hero panel"><div class="hero-copy"><p class="eyebrow"><span class="live-dot"></span> OPERATOR FILE / 001</p><h1>PRATHMESH<br><em>MANTE</em></h1><p class="role">COMPUTER SCIENCE ENGINEERING · SYSTEMS BUILDER</p><p class="intro">Ideas are the spark. Working systems are the point. Explore the engineering archive with V.E.R.A. as your guide.</p><div class="buttons"><button class="btn hot" id="summonBtn">SUMMON V.E.R.A. <b>↗</b></button><a class="btn" href="#projects">MISSION ARCHIVE ↓</a></div><div class="tags"><span>AI / AGENTS</span><span>FULL STACK</span><span>NETWORKS / SECURITY</span></div></div>
-<div class="holo"><div class="radar"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="portrait-frame"><div class="portrait-placeholder"><span class="head">V</span><span class="shoulders"></span><span class="scanline"></span><b>NEURAL INTERFACE<br>ONLINE</b></div></div><div class="orbit-dot od1"></div><div class="orbit-dot od2"></div><div class="orbit-dot od3"></div><div class="callout c1">HOLO ARRAY <b>CALIBRATED</b></div><div class="callout c2">VOICE CORE <b id="holoStatus">STANDBY</b></div><div class="target">✳</div></div><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div></section>
-<section class="telemetry"><article class="metric panel"><span>01 / DIRECTIVE</span><strong>ENGINEER</strong><small>Prototype · test · improve</small></article><article class="metric panel"><span>02 / INTEREST</span><strong>INTELLIGENCE</strong><small>AI agents and connected systems</small></article><article class="metric panel"><span>03 / ARCHIVE</span><strong id="repoCount">SYNCING</strong><small>Public repositories indexed live</small></article></section>
-<section id="projects" class="block"><div class="block-head"><div><p class="eyebrow">02 / PROJECT ARCHIVE</p><h2>MISSION FILES</h2></div><span id="repoStatus">CONNECTING TO GITHUB…</span></div><div class="projects" id="liveRepos"><article class="project panel"><div class="file-id">GITHUB API / INITIALIZING</div><div class="project-icon">◉</div><h3>Loading repository intelligence</h3><p>V.E.R.A. is contacting GitHub's public API.</p></article></div><p class="sync-note" id="syncNote">Repository metadata is fetched live. Select “ASK V.E.R.A.” on a mission to hear its briefing.</p></section>
-<section id="capabilities" class="block"><div class="block-head"><div><p class="eyebrow">03 / LIVE TECH INTELLIGENCE</p><h2>TECH MATRIX</h2></div><span>PUBLIC METADATA · NOT A SKILL RATING</span></div><div class="capabilities panel" id="liveTech"><p>Synchronizing repository language metadata…</p></div></section>
-<section id="assistant" class="block"><div class="block-head"><div><p class="eyebrow">04 / INTELLIGENCE INTERFACE</p><h2>V.E.R.A. CORE</h2></div><span id="voiceState">VOICE STANDBY</span></div><div class="voice-panel panel"><div class="assistant-visual" id="assistantVisual"><div class="av-ring"></div><div class="av-ring two"></div><div class="av-core">V<span>✦</span></div><label>PERSONALITY CORE / ACTIVE</label><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="voice-content"><p class="eyebrow">YOUR COMPOSED, OBSERVANT, SLIGHTLY WITTY SYSTEMS PARTNER</p><h3 id="voiceTitle">Awaiting operator authorization.</h3><p id="voiceReply">V.E.R.A. can speak about public repository metadata and README content after the voice session is activated. The first screen remains locked until the passphrase is spoken successfully.</p><div class="voice-actions"><button class="btn hot" id="enableVoice">ACTIVATE VOICE</button><button class="btn" id="repeatPrompt">REPEAT BRIEFING</button><button class="btn" id="stopVoice">MUTE VOICE</button><button class="btn" id="askRepos">SCAN ARCHIVE</button></div><div class="voice-actions"><button class="btn" id="voiceQuestion">ASK ABOUT THIS PROJECT</button><button class="btn" id="voiceName">IDENTIFY VISITOR BY VOICE</button></div><div class="log"><span>LIVE SYSTEM LOG</span><p id="logLine">Waiting for authorization handshake…</p></div><p class="warning">TRUTH PROTOCOL: this static website can read public GitHub data and use browser speech. It is not yet connected to a generative AI model. GitHub does not reveal a visitor's account identity to a public webpage; verified recognition of Boss requires GitHub OAuth and a backend. The demo passphrase is not real security.</p></div></div></section>
-<footer><span>V.E.R.A. // ENGINEERING INTELLIGENCE</span><span>INDEPENDENT DESIGN · BUILT WITH CURIOSITY</span><a href="https://github.com/prathmeshmante-glitch?tab=repositories" target="_blank" rel="noopener">PUBLIC REPOSITORIES ↗</a></footer></main></div>
-<div class="welcome-overlay" id="welcomeOverlay"><div class="welcome-card panel" id="welcomeCard"><div class="welcome-symbol">V</div><p class="eyebrow">VISITOR HANDSHAKE / REQUIRED</p><h2 id="welcomeTitle">Good evening. I'm V.E.R.A.</h2><p id="welcomeText">Boss is currently away. I can guide you through the public engineering archive. To enter the command deck, activate voice and say the passphrase when prompted.</p><div class="voice-orb" id="welcomeOrb"><span>V</span><i></i></div><p class="voice-status" id="authStatus">VOICE LINK OFFLINE · AUTHORIZATION REQUIRED</p><button class="btn hot modal-submit" id="beginVoice">INITIALIZE VOICE & AUTHORIZE <b>↗</b></button><button class="text-btn" id="retryVoice" hidden>TRY VOICE INPUT AGAIN</button><p class="modal-error" id="modalError" role="status"></p><a class="public-link" href="https://github.com/prathmeshmante-glitch?tab=repositories" target="_blank" rel="noopener">OPEN PUBLIC REPOSITORIES WITHOUT ENTERING ↗</a><p class="small">Voice recognition requires a supported browser and microphone permission. No typed passphrase is provided.</p></div></div>
-<script src="script.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080A0F" />
+  <meta name="description" content="V.E.R.A. — Voice-Enabled Reconnaissance & Assistance. Cinematic personal engineering intelligence for Prathmesh Mante." />
+  <title>V.E.R.A. // ENGINEERING COMMAND DECK</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Ambient & Scanline VFX -->
+  <div class="ambient-glow" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="radar-grid" aria-hidden="true"></div>
+
+  <!-- Top System Bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-left">
+      <a class="brand" href="#home" aria-label="V.E.R.A. Home">
+        <span class="sigil-box">
+          <span class="sigil">V</span>
+        </span>
+        <div class="brand-text">
+          <span class="brand-title">V.E.R.A.</span>
+          <span class="brand-sub">VOICE-ENABLED RECONNAISSANCE & ASSISTANCE</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="topbar-center">
+      <div class="hud-pill" id="backendBadge">
+        <span class="hud-dot pulsing"></span>
+        <span class="hud-label" id="backendLabel">INITIALIZING TELEMETRY</span>
+      </div>
+      <div class="hud-pill" id="voiceStateBadge">
+        <span class="hud-icon">◉</span>
+        <span class="hud-label" id="voiceStateLabel">VOICE STANDBY</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="sound-toggle-btn" id="soundToggle" title="Toggle System Audio SFX" aria-label="Toggle Sound Effects">
+        <span id="soundIcon">🔊</span> <span id="soundLabel">SFX ON</span>
+      </button>
+      <div class="clock-display" id="clock" aria-label="System Time">--:--:--</div>
+      <div class="system-status-indicator">
+        <i class="status-orb" id="topStatusOrb"></i>
+        <span id="systemStatusText">CORE ONLINE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Command Deck Layout -->
+  <div class="layout" id="home">
+    <!-- Navigation Rail -->
+    <aside class="sidebar" role="navigation" aria-label="System Navigation">
+      <div class="nav-header">SYSTEM SYSTEMS / 09</div>
+      <nav class="nav-menu">
+        <a class="nav-item active" href="#home" data-target="home">
+          <span class="nav-icon">⌂</span>
+          <span class="nav-label">Command Deck</span>
+          <span class="nav-code">01</span>
+        </a>
+        <a class="nav-item" href="#core" data-target="core">
+          <span class="nav-icon">◉</span>
+          <span class="nav-label">V.E.R.A. Core</span>
+          <span class="nav-code">02</span>
+        </a>
+        <a class="nav-item" href="#archive" data-target="archive">
+          <span class="nav-icon">◈</span>
+          <span class="nav-label">Mission Archive</span>
+          <span class="nav-code">03</span>
+        </a>
+        <a class="nav-item" href="#intelligence" data-target="intelligence">
+          <span class="nav-icon">⌘</span>
+          <span class="nav-label">Engineering Intel</span>
+          <span class="nav-code">04</span>
+        </a>
+        <a class="nav-item" href="#architecture" data-target="architecture">
+          <span class="nav-icon">⌁</span>
+          <span class="nav-label">Architecture View</span>
+          <span class="nav-code">05</span>
+        </a>
+        <a class="nav-item" href="#matrix" data-target="matrix">
+          <span class="nav-icon">⎔</span>
+          <span class="nav-label">Tech Matrix</span>
+          <span class="nav-code">06</span>
+        </a>
+        <a class="nav-item" href="#memory" data-target="memory">
+          <span class="nav-icon">⌬</span>
+          <span class="nav-label">Memory & Persona</span>
+          <span class="nav-code">07</span>
+        </a>
+        <a class="nav-item" href="#diagnostics" data-target="diagnostics">
+          <span class="nav-icon">⟁</span>
+          <span class="nav-label">System Diagnostics</span>
+          <span class="nav-code">08</span>
+        </a>
+        <a class="nav-item" href="#settings" data-target="settings">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Settings & Access</span>
+          <span class="nav-code">09</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="operator-badge">
+          <span class="operator-dot"></span>
+          <div>
+            <div class="op-title">OPERATOR FILE</div>
+            <div class="op-name">PRATHMESH MANTE</div>
+          </div>
+        </div>
+        <div class="system-build-tag">V.E.R.A. ENGINE v2.4.0</div>
+      </div>
+    </aside>
+
+    <!-- Main Stage Content -->
+    <main class="main-content" role="main">
+      <!-- HERO COMMAND STAGE -->
+      <section class="hero-stage panel" id="heroSection">
+        <div class="hero-content">
+          <div class="eyebrow-tag">
+            <span class="tag-pulse"></span>
+            <span>OPERATOR DOSSIER // VERIFIED SOURCE ARCHIVE</span>
+          </div>
+          <h1 class="hero-title">
+            PRATHMESH<br />
+            <span class="gold-gradient">MANTE</span>
+          </h1>
+          <p class="hero-role">COMPUTER SCIENCE ENGINEERING · SYSTEMS ARCHITECT · AI BUILDER</p>
+          <p class="hero-desc">
+            Bridging autonomous intelligence, full-stack engineering, and high-performance system design. 
+            V.E.R.A. is active to guide you through verified repository architectures, live dependencies, and implementation decisions.
+          </p>
+
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="summonVeraBtn">
+              <span class="btn-glow"></span>
+              <span class="btn-text">◉ SUMMON V.E.R.A.</span>
+            </button>
+            <a class="btn btn-secondary" href="#archive">
+              <span>EXPLORE MISSIONS ↓</span>
+            </a>
+            <button class="btn btn-outline" id="requestBriefingBtn">
+              <span>⚡ EXECUTIVE BRIEFING</span>
+            </button>
+          </div>
+
+          <div class="hero-chips">
+            <span class="chip">AI AGENTS & WORKFLOWS</span>
+            <span class="chip">FULL STACK & FASTAPI</span>
+            <span class="chip">DISTRIBUTED NETWORKS</span>
+            <span class="chip">SECURITY & AUTH</span>
+          </div>
+        </div>
+
+        <!-- Central Holographic Core Visualization -->
+        <div class="holo-stage" id="holoStage" aria-label="V.E.R.A. Holographic Core Visualizer">
+          <div class="holo-depth-grid"></div>
+          
+          <!-- Concentric Multi-Axis 3D Orbital Rings -->
+          <div class="ring-container">
+            <div class="orbit-ring ring-1"></div>
+            <div class="orbit-ring ring-2"></div>
+            <div class="orbit-ring ring-3"></div>
+            <div class="orbit-ring ring-4"></div>
+          </div>
+
+          <!-- Central Core Node & Artwork -->
+          <div class="holo-core-center" id="holoCoreCenter">
+            <div class="core-backdrop"></div>
+            <img class="core-avatar-img" src="assets/vera_core.jpg" alt="V.E.R.A. Neural Core" id="coreAvatarImg" onerror="this.style.display='none'" />
+            <div class="core-sigil-overlay">
+              <span class="core-letter">V</span>
+              <span class="core-spark">✦</span>
+            </div>
+            <div class="core-scanner-beam"></div>
+          </div>
+
+          <!-- Dynamic Audio Telemetry Waveform -->
+          <div class="radial-waveform" id="radialWaveform" aria-hidden="true">
+            <!-- 16 dynamic waveform bars -->
+            <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+            <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+            <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+            <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+          </div>
+
+          <!-- HUD Telemetry Nodes -->
+          <div class="hud-marker marker-tl">ARRAY: <b id="holoArrayStatus">CALIBRATED</b></div>
+          <div class="hud-marker marker-tr">NEURAL: <b id="holoNeuralStatus">OPERATIONAL</b></div>
+          <div class="hud-marker marker-bl">CHANNEL: <b id="holoChannelStatus">SECURE</b></div>
+          <div class="hud-marker marker-br">STATE: <b id="holoCoreState">STANDBY</b></div>
+          <div class="hud-crosshair">+</div>
+
+          <!-- Decorative Corner Accents -->
+          <div class="panel-corner corner-tl"></div>
+          <div class="panel-corner corner-tr"></div>
+          <div class="panel-corner corner-bl"></div>
+          <div class="panel-corner corner-br"></div>
+        </div>
+      </section>
+
+      <!-- SYSTEM METRICS TELEMETRY STRIP -->
+      <section class="telemetry-strip" aria-label="System Metrics">
+        <article class="metric-card panel">
+          <div class="metric-label">01 / DIRECTIVE</div>
+          <div class="metric-value">ENGINEER</div>
+          <div class="metric-sub">Explore · Architect · Ship</div>
+        </article>
+        <article class="metric-card panel">
+          <div class="metric-label">02 / CORE FOCUS</div>
+          <div class="metric-value">AI INTELLIGENCE</div>
+          <div class="metric-sub">Agent Workflows & Reasoning</div>
+        </article>
+        <article class="metric-card panel">
+          <div class="metric-label">03 / PUBLIC ARCHIVE</div>
+          <div class="metric-value" id="metricRepoCount">SYNCING...</div>
+          <div class="metric-sub" id="metricRepoSub">Live GitHub API verified</div>
+        </article>
+        <article class="metric-card panel">
+          <div class="metric-label">04 / VOICE SYNTHESIS</div>
+          <div class="metric-value" id="metricVoiceType">FEMININE EN</div>
+          <div class="metric-sub" id="metricVoiceSub">Browser Engine Ready</div>
+        </article>
+      </section>
+
+      <!-- SYSTEM 01: V.E.R.A. CORE INTERFACE -->
+      <section id="core" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 01 // NATURAL INTERACTION</div>
+            <h2 class="section-title">V.E.R.A. CORE</h2>
+          </div>
+          <div class="section-meta">
+            <span class="live-badge" id="coreEngineBadge">AI GROUNDED ENGINE</span>
+          </div>
+        </div>
+
+        <div class="core-console panel">
+          <!-- Voice Orb & Visualizer Column -->
+          <div class="console-visual-col">
+            <div class="console-orb" id="consoleOrb">
+              <div class="orb-ring outer"></div>
+              <div class="orb-ring inner"></div>
+              <div class="orb-sigil">V</div>
+              <div class="orb-pulse"></div>
+            </div>
+            <div class="orb-status-text" id="consoleOrbStatus">CORE STANDBY</div>
+            
+            <div class="voice-activity-wave" id="voiceActivityWave">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+
+            <div class="voice-mode-controls">
+              <button class="btn btn-sm btn-primary" id="toggleVoiceBtn">
+                <span id="voiceBtnIcon">◉</span> <span id="voiceBtnText">START VOICE</span>
+              </button>
+              <button class="btn btn-sm btn-outline" id="stopSpeechBtn" disabled>
+                <span>■ MUTE / STOP</span>
+              </button>
+              <button class="btn btn-sm btn-ghost" id="repeatSpeechBtn">
+                <span>↺ REPEAT</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transcript & Interactive Dialog Column -->
+          <div class="console-chat-col">
+            <div class="chat-header">
+              <div class="chat-status-line">
+                <span class="status-dot green" id="chatStatusDot"></span>
+                <span class="chat-headline" id="chatHeadline">Awaiting operator instructions.</span>
+              </div>
+              <div class="chat-actions">
+                <button class="text-link-btn" id="clearChatBtn" title="Clear conversation history">CLEAR CONVERSATION</button>
+              </div>
+            </div>
+
+            <!-- Conversational Feed -->
+            <div class="conversation-feed" id="conversationFeed" role="log" aria-live="polite">
+              <div class="feed-entry assistant-entry">
+                <div class="entry-meta">
+                  <span class="entry-badge">V.E.R.A.</span>
+                  <span class="entry-time" id="welcomeTimestamp">JUST NOW</span>
+                </div>
+                <div class="entry-content">
+                  <p class="spoken-summary">
+                    “Core systems are online. Good day. I am V.E.R.A., systems engineering intelligence for Prathmesh Mante. Shall we examine the mission archive?”
+                  </p>
+                  <div class="entry-technical-details">
+                    <p>
+                      <strong>Active Capabilities:</strong>
+                    </p>
+                    <ul>
+                      <li>Real-time GitHub public repository inspection (<code>brandforge</code>, <code>inkloom</code>, and portfolio archives).</li>
+                      <li>Live README extraction, technical stack analysis, and dependency verification.</li>
+                      <li>Interactive architectural flow breakdown and system diagnostics.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Inquiry Suggestions -->
+            <div class="quick-prompts">
+              <span class="qp-label">QUICK RECON:</span>
+              <button class="qp-chip" data-prompt="Explain BrandForge architecture">Explain BrandForge</button>
+              <button class="qp-chip" data-prompt="What technologies are verified in InkLoom?">InkLoom Tech Stack</button>
+              <button class="qp-chip" data-prompt="What are the verified repositories on GitHub?">Scan Archive</button>
+              <button class="qp-chip" data-prompt="How would I run BrandForge locally?">Run BrandForge Locally</button>
+            </div>
+
+            <!-- Text Input Fallback -->
+            <form class="chat-input-form" id="chatInputForm">
+              <input 
+                type="text" 
+                class="chat-input" 
+                id="chatTextInput" 
+                placeholder="Ask V.E.R.A. a technical question or type an engineering query..." 
+                autocomplete="off"
+              />
+              <button type="submit" class="btn btn-primary chat-submit-btn" id="sendTextBtn">
+                <span>SEND ➔</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 02: MISSION ARCHIVE -->
+      <section id="archive" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 02 // PUBLIC REPOSITORY INDEX</div>
+            <h2 class="section-title">MISSION ARCHIVE</h2>
+          </div>
+          <div class="section-meta">
+            <span class="repo-sync-indicator" id="repoSyncStatus">SYNCING GITHUB API...</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div class="archive-toolbar panel">
+          <div class="toolbar-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="repoSearchInput" placeholder="Filter repositories by name, language, or topic..." />
+          </div>
+          <div class="toolbar-filters">
+            <button class="filter-pill active" data-filter="all">ALL</button>
+            <button class="filter-pill" data-filter="TypeScript">TYPESCRIPT</button>
+            <button class="filter-pill" data-filter="Python">PYTHON</button>
+            <button class="filter-pill" data-filter="HTML">HTML / WEB</button>
+          </div>
+          <div class="toolbar-sync">
+            <button class="btn btn-sm btn-outline" id="refreshReposBtn">
+              <span>↻ RE-SYNC GITHUB</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Repositories Grid -->
+        <div class="mission-grid" id="missionGrid" aria-live="polite">
+          <!-- Populated by JavaScript from live GitHub API -->
+          <div class="loading-placeholder">
+            <div class="spinner"></div>
+            <p>Connecting to GitHub public API to discover operator repositories...</p>
+          </div>
+        </div>
+
+        <p class="section-footnote" id="archiveFootnote">
+          * Repository metadata and statistics are retrieved live from GitHub's REST API. No synthetic repositories are listed.
+        </p>
+      </section>
+
+      <!-- SYSTEM 03: ENGINEERING INTELLIGENCE -->
+      <section id="intelligence" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 03 // ARCHITECTURAL REASONING</div>
+            <h2 class="section-title">ENGINEERING INTELLIGENCE</h2>
+          </div>
+          <div class="section-meta">
+            <span>GROUNDED TECHNICAL RETRIEVAL</span>
+          </div>
+        </div>
+
+        <div class="intelligence-grid">
+          <!-- Query Matrix Card -->
+          <div class="intel-card panel">
+            <div class="card-eyebrow">TARGETED INQUIRY</div>
+            <h3>SELECT RECONNAISSANCE TOPIC</h3>
+            <p class="card-desc">Ask V.E.R.A. to conduct deep architectural evaluations over verified source documentation.</p>
+
+            <div class="intel-action-list">
+              <button class="intel-action-item" data-query="Explain the end-to-end architecture of BrandForge">
+                <span class="ia-icon">🏛️</span>
+                <div>
+                  <strong>BrandForge System Architecture</strong>
+                  <small>Next.js client, LangGraph agent workflows, Supabase storage</small>
+                </div>
+                <span class="ia-arrow">➔</span>
+              </button>
+
+              <button class="intel-action-item" data-query="What is InkLoom and how do its specialized AI models work?">
+                <span class="ia-icon">🎨</span>
+                <div>
+                  <strong>InkLoom Model Specialization</strong>
+                  <small>Constraint-based vector logo generation & typography lockups</small>
+                </div>
+                <span class="ia-arrow">➔</span>
+              </button>
+
+              <button class="intel-action-item" data-query="What would a senior engineer review first in these projects?">
+                <span class="ia-icon">🔍</span>
+                <div>
+                  <strong>Senior Engineering Code Review</strong>
+                  <small>State management, agent boundary validation, security audits</small>
+                </div>
+                <span class="ia-arrow">➔</span>
+              </button>
+
+              <button class="intel-action-item" data-query="What are the current limitations and proposed improvements?">
+                <span class="ia-icon">⚙️</span>
+                <div>
+                  <strong>Limitations & Roadmap Analysis</strong>
+                  <small>Honest assessment of bottlenecks, latency, and roadmap items</small>
+                </div>
+                <span class="ia-arrow">➔</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Analysis Display Card -->
+          <div class="intel-card panel intel-display-card">
+            <div class="card-eyebrow" id="intelDisplayEyebrow">ANALYSIS LOG // READY</div>
+            <h3 id="intelDisplayTitle">Select an investigation to commence</h3>
+            <div class="intel-content-box" id="intelContentBox">
+              <p class="placeholder-text">
+                V.E.R.A. is ready to analyze public project structure. When selected, briefings analyze verified READMEs, configuration files, and live repository telemetry to present factual architectural breakdowns.
+              </p>
+            </div>
+            <div class="intel-source-footer" id="intelSourceFooter">
+              <span id="intelSourceLabel">Sources: Verified GitHub Public Repositories</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 04: PROJECT ARCHITECTURE VIEW -->
+      <section id="architecture" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 04 // TOPOLOGY & WORKFLOWS</div>
+            <h2 class="section-title">PROJECT ARCHITECTURE VIEW</h2>
+          </div>
+          <div class="section-meta">
+            <span id="archActiveRepoLabel">TARGET: BRANDFORGE</span>
+          </div>
+        </div>
+
+        <div class="architecture-explorer panel">
+          <div class="arch-toolbar">
+            <span class="arch-label">SELECT PROJECT GRAPH:</span>
+            <div class="arch-repo-buttons" id="archRepoButtons">
+              <button class="btn btn-xs btn-primary arch-select-btn active" data-repo="brandforge">BrandForge</button>
+              <button class="btn btn-xs btn-outline arch-select-btn" data-repo="inkloom">InkLoom</button>
+              <button class="btn btn-xs btn-outline arch-select-btn" data-repo="prathmeshmante-glitch.github.io">V.E.R.A. Command Deck</button>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Topology Visualizer -->
+          <div class="arch-graph-stage" id="archGraphStage">
+            <svg class="arch-svg" id="archSvg" viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+              <!-- Rendered dynamically by script.js -->
+            </svg>
+          </div>
+
+          <!-- Component Details Drawer -->
+          <div class="arch-node-details" id="archNodeDetails">
+            <div class="node-detail-header">
+              <span class="node-type-badge" id="nodeTypeBadge">FRONTEND CLIENT</span>
+              <h4 id="nodeTitle">Next.js & TypeScript Interface</h4>
+            </div>
+            <p id="nodeDescription">
+              The presentation tier features responsive modular components, interactive canvas workflows, and optimistic client-side updates.
+            </p>
+            <div class="node-tech-tags" id="nodeTechTags">
+              <span class="tech-tag">Next.js</span>
+              <span class="tech-tag">TypeScript</span>
+              <span class="tech-tag">Tailwind CSS</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 05: TECH MATRIX -->
+      <section id="matrix" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 05 // DEPENDENCY TELEMETRY</div>
+            <h2 class="section-title">TECHNOLOGY MATRIX</h2>
+          </div>
+          <div class="section-meta">
+            <span>EVIDENCE-BASED MANIFEST INTELLIGENCE</span>
+          </div>
+        </div>
+
+        <div class="tech-matrix-container panel">
+          <div class="matrix-grid" id="matrixGrid">
+            <!-- Dynamically populated from actual repo package.json & requirements.txt -->
+            <div class="matrix-column">
+              <div class="matrix-col-header">LANGUAGES & RUNTIMES</div>
+              <div class="matrix-items" id="matrixLanguages">
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>TypeScript</span><b>100%</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:90%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>Python</span><b>85%</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:75%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>C++</span><b>70%</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:65%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="matrix-column">
+              <div class="matrix-col-header">FRAMEWORKS & ENGINES</div>
+              <div class="matrix-items" id="matrixFrameworks">
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>Next.js & React</span><b>Verified in BrandForge</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:85%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>FastAPI & Uvicorn</span><b>Verified in API Services</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:80%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>LangGraph & Agents</span><b>Verified in Agent Pipelines</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:75%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="matrix-column">
+              <div class="matrix-col-header">SERVICES & PERSISTENCE</div>
+              <div class="matrix-items" id="matrixServices">
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>Supabase & PostgreSQL</span><b>Verified</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:75%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>OpenAI & Model APIs</span><b>Verified</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:80%"></div></div>
+                </div>
+                <div class="matrix-item">
+                  <div class="mi-meta"><span>Docker & Git</span><b>Verified</b></div>
+                  <div class="mi-bar"><div class="mi-fill" style="width:70%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="matrix-disclaimer">
+            Notice: Values indicate detected presence across public repository manifests (<code>package.json</code>, <code>requirements.txt</code>), not subjective proficiency rankings.
+          </p>
+        </div>
+      </section>
+
+      <!-- SYSTEM 06: MEMORY & PERSONALITY -->
+      <section id="memory" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 06 // CONTINUITY & CONTEXT</div>
+            <h2 class="section-title">MEMORY & PERSONALITY</h2>
+          </div>
+          <div class="section-meta">
+            <span class="memory-storage-badge" id="memoryStorageBadge">LOCAL STORAGE ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="memory-panel panel">
+          <div class="memory-top">
+            <div>
+              <h3>V.E.R.A. Preference Ledger</h3>
+              <p>Transparent memory tracking. Inspect, adjust, or erase permitted session preferences at any time.</p>
+            </div>
+            <div class="memory-actions">
+              <button class="btn btn-sm btn-outline" id="clearMemoryBtn">ERASE ALL MEMORY</button>
+              <button class="btn btn-sm btn-ghost" id="toggleMemoryEnabledBtn">DISABLE MEMORY</button>
+            </div>
+          </div>
+
+          <div class="memory-entries-list" id="memoryEntriesList">
+            <!-- Entries injected by script.js -->
+          </div>
+
+          <div class="memory-form-card">
+            <h4>Update Form of Address & Preferences</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prefNameInput">Preferred Name / Form of Address</label>
+                <input type="text" id="prefNameInput" placeholder="e.g. Visitor, Alex" />
+              </div>
+              <div class="form-group">
+                <label for="prefDepthSelect">Explanation Depth</label>
+                <select id="prefDepthSelect">
+                  <option value="concise">Concise Spoken (JARVIS Style)</option>
+                  <option value="detailed">Detailed Technical Deep Dive</option>
+                  <option value="executive">Executive Summary Only</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="savePrefBtn">SAVE PREFERENCES</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 07: SYSTEM DIAGNOSTICS HUD -->
+      <section id="diagnostics" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 07 // TELEMETRY & HEALTH</div>
+            <h2 class="section-title">SYSTEM DIAGNOSTICS</h2>
+          </div>
+          <div class="section-meta">
+            <span class="diag-pulse"></span>
+            <span>LIVE SENSOR FEED</span>
+          </div>
+        </div>
+
+        <div class="diagnostics-grid">
+          <div class="diag-card panel">
+            <div class="diag-label">BROWSER SPEECH RECOGNITION</div>
+            <div class="diag-val" id="diagSpeechRec">CHECKING...</div>
+            <div class="diag-detail" id="diagSpeechRecDetail">Web Speech API detection</div>
+          </div>
+
+          <div class="diag-card panel">
+            <div class="diag-label">SPEECH SYNTHESIS ENGINE</div>
+            <div class="diag-val" id="diagSpeechSynth">CHECKING...</div>
+            <div class="diag-detail" id="diagSpeechSynthDetail">Voice count & locale</div>
+          </div>
+
+          <div class="diag-card panel">
+            <div class="diag-label">MICROPHONE PERMISSION</div>
+            <div class="diag-val" id="diagMicPerm">PENDING USER GESTURE</div>
+            <div class="diag-detail" id="diagMicPermDetail">navigator.permissions check</div>
+          </div>
+
+          <div class="diag-card panel">
+            <div class="diag-label">BACKEND API SERVICE</div>
+            <div class="diag-val" id="diagBackendStatus">CONNECTING...</div>
+            <div class="diag-detail" id="diagBackendDetail">FastAPI health check</div>
+          </div>
+
+          <div class="diag-card panel">
+            <div class="diag-label">AI REASONING PROVIDER</div>
+            <div class="diag-val" id="diagAiProvider">VERIFYING...</div>
+            <div class="diag-detail" id="diagAiProviderDetail">Provider key & model status</div>
+          </div>
+
+          <div class="diag-card panel">
+            <div class="diag-label">GITHUB API CONNECTIVITY</div>
+            <div class="diag-val" id="diagGithubStatus">CHECKING...</div>
+            <div class="diag-detail" id="diagGithubDetail">Rate limit remaining</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 08: PERSONAL BRIEFING -->
+      <section id="briefing" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 08 // SITUATIONAL BRIEFING</div>
+            <h2 class="section-title">EXECUTIVE BRIEFING</h2>
+          </div>
+          <div class="section-meta">
+            <button class="btn btn-sm btn-primary" id="triggerAudioBriefingBtn">
+              <span>▶ PLAY SPOKEN BRIEFING</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="briefing-box panel">
+          <div class="briefing-top">
+            <div class="briefing-sigil">V</div>
+            <div>
+              <h3>DAILY SITUATIONAL REPORT</h3>
+              <p id="briefingTimeStr">Generated for Operator Prathmesh Mante</p>
+            </div>
+          </div>
+          <div class="briefing-body" id="briefingBodyText">
+            <p>
+              “Core systems are nominal. V.E.R.A. is monitoring public repository endpoints for operator Prathmesh Mante. 
+              BrandForge is active with agentic brand pipelines, and InkLoom is deploying specialized generative mark models. 
+              All telemetric sensors and voice audio channels are calibrated.”
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SYSTEM 09: SETTINGS -->
+      <section id="settings" class="system-section">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">SYSTEM 09 // CONFIGURATION</div>
+            <h2 class="section-title">SYSTEM SETTINGS</h2>
+          </div>
+          <div class="section-meta">
+            <span>PREFERENCES & ACCESS CONTROL</span>
+          </div>
+        </div>
+
+        <div class="settings-grid panel">
+          <div class="setting-item">
+            <div>
+              <strong>Preferred Voice Engine</strong>
+              <small>Feminine English voice prioritized when available</small>
+            </div>
+            <select id="voicePickerSelect" class="settings-select">
+              <option value="">Auto-Detect Feminine English</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Speaking Rate (Speed)</strong>
+              <small>Adjust V.E.R.A.'s spoken pacing</small>
+            </div>
+            <div class="range-group">
+              <input type="range" id="speechRateSlider" min="0.7" max="1.3" step="0.05" value="1.0" />
+              <span id="speechRateVal">1.0x</span>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Sound FX Audio Chimes</strong>
+              <small>Synthesized Web Audio confirmation tones</small>
+            </div>
+            <button class="btn btn-xs btn-outline" id="settingsSfxToggle">ENABLED</button>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Reduced Motion Mode</strong>
+              <small>Respect accessibility preferences or force static HUD</small>
+            </div>
+            <button class="btn btn-xs btn-outline" id="reducedMotionToggle">SYSTEM DEFAULT</button>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <strong>Lock Command Deck</strong>
+              <small>Return to voice-authorization handshake screen</small>
+            </div>
+            <button class="btn btn-xs btn-primary" id="relockDeckBtn">LOCK SESSION 🔒</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Site Footer -->
+      <footer class="command-footer">
+        <div class="footer-left">
+          <span>V.E.R.A. // VOICE-ENABLED RECONNAISSANCE & ASSISTANCE</span>
+          <span class="footer-sub">PERSONAL INTELLIGENCE SYSTEM FOR PRATHMESH MANTE</span>
+        </div>
+        <div class="footer-center">
+          <span>CINEMATIC ARCHITECTURE · GROUNDED IN TRUTH</span>
+        </div>
+        <div class="footer-right">
+          <a href="https://github.com/prathmeshmante-glitch" target="_blank" rel="noopener" class="footer-link">GITHUB PROFILE ↗</a>
+          <a href="https://github.com/prathmeshmante-glitch?tab=repositories" target="_blank" rel="noopener" class="footer-link">REPOSITORIES ↗</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- CINEMATIC OPENING VOICE AUTHORIZATION OVERLAY -->
+  <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="welcome-card panel" id="welcomeCard">
+      <!-- Animated Sigil -->
+      <div class="welcome-sigil-box">
+        <div class="sigil-glow"></div>
+        <div class="sigil-char">V</div>
+      </div>
+
+      <div class="welcome-eyebrow">OPERATOR PASS-GATE // CEREMONIAL VOICE ENTRY</div>
+      <h2 id="welcomeTitle">V.E.R.A. ONLINE</h2>
+      
+      <p id="welcomeText" class="welcome-desc">
+        Boss is currently away. I can guide you through the public engineering archive. 
+        To enter the command deck, activate the voice link and speak the passphrase when prompted.
+      </p>
+
+      <!-- Reactive Voice Orb -->
+      <div class="auth-voice-orb" id="authVoiceOrb">
+        <div class="orb-ring ring-1"></div>
+        <div class="orb-ring ring-2"></div>
+        <div class="orb-ring ring-3"></div>
+        <span class="orb-center-letter">V</span>
+        <i class="orb-indicator-dot" id="orbIndicatorDot"></i>
+      </div>
+
+      <div class="auth-status-banner" id="authStatusBanner">
+        <span class="auth-status-dot"></span>
+        <span id="authStatusText">VOICE LINK READY · AUTHORIZATION REQUIRED</span>
+      </div>
+
+      <div class="auth-controls">
+        <button class="btn btn-primary auth-submit-btn" id="beginVoiceBtn">
+          <span class="btn-glow"></span>
+          <span id="beginVoiceBtnText">INITIALIZE VOICE & AUTHORIZE <b>↗</b></span>
+        </button>
+
+        <button class="btn btn-outline auth-retry-btn" id="retryVoiceBtn" hidden>
+          <span>TRY VOICE INPUT AGAIN</span>
+        </button>
+      </div>
+
+      <!-- Live Error / Guidance Message -->
+      <p class="auth-error-msg" id="authErrorMsg" role="alert"></p>
+
+      <div class="auth-passphrase-hint">
+        <span>DEMONSTRATION PASSPHRASE:</span> <strong>“Prat”</strong>
+        <p class="auth-hint-sub">Say “Prat” clearly once the orb begins listening.</p>
+      </div>
+
+      <div class="auth-fallback-nav">
+        <a class="public-archive-link" href="https://github.com/prathmeshmante-glitch?tab=repositories" target="_blank" rel="noopener">
+          OPEN GITHUB PUBLIC REPOSITORIES WITHOUT ENTERING ↗
+        </a>
+      </div>
+
+      <div class="auth-fineprint">
+        Notice: Voice recognition requires a supported browser (Google Chrome or Microsoft Edge) with microphone access allowed over HTTPS or localhost. The voice gate is an interactive visitor experience; sensitive owner operations require verified GitHub OAuth.
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

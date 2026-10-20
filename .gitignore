@@ -1,0 +1,27 @@
+# Secrets and environment variables
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Node / Scratch
+node_modules/
+aura-github-starter/
+check_deployed_repo.py
+download_deployed.py
+deployed_site/
+scratch/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
