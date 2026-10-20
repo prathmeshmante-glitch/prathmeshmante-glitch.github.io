@@ -55,14 +55,43 @@ Live discovery through GitHub's API verified the following repositories for oper
 ## 4. Test Execution & Outcomes
 
 ### A. Backend Unit & Integration Tests (`backend/tests/test_api.py`)
-- **Status:** `7 PASSED, 0 FAILED in 8.17s`
-- Verified: Health endpoints, system diagnostics, GitHub repository caching, deterministic chat briefings for `brandforge`, situational reports, and memory lifecycle operations.
+- **Status:** `14 PASSED, 0 FAILED in 12.69s` (100% passing)
+- Verified: Health endpoints, system diagnostics, GitHub repository caching, identity pronunciation (never spells V-E-R-A), operator respect protocol (`Boss`), wake-phrase acknowledgement (`Yes, Boss?` vs `Yes? I'm listening.`), visitor conduct protocol (rude, security probe, prompt injection boundaries), multi-repository comparative reasoning (`brandforge` vs `inkloom`), active repository context resolution (`this repository`), situational briefings, and memory lifecycle operations.
 
 ### B. Full System Acceptance Tests (`tests/test_full_system.py`)
-- `[PASS]` Frontend `index.html` verified across all 10 core system elements.
-- `[PASS]` Frontend `style.css` verified with complete design tokens and animations.
-- `[PASS]` Frontend `script.js` verified with passphrase normalization and state machine.
+- **Status:** `10 PASSED, 0 FAILED (10/10 Suites)`
+- `[PASS]` Frontend `index.html` verified with all core systems and Always-Listening controls.
+- `[PASS]` Frontend `style.css` verified with color tokens and Always-Listening HUD styling.
+- `[PASS]` Frontend `script.js` verified with `VeraVoiceEngine`, wake-word loop, and command router.
 - `[PASS]` Hologram core asset verified (`1,076,090 bytes`).
 - `[PASS]` Backend `/health` verified.
-- `[PASS]` Backend `/api/system/diagnostics` verified.
-- `[PASS]` Backend `/api/assistant/chat` verified with grounded repository reasoning.
+- `[PASS]` Backend `/api/assistant/wake-acknowledgement` verified for Operator (`Boss`) and Visitor.
+- `[PASS]` Vera Name & Pronunciation rule verified (answers *"I'm Vera"*, never spells V-E-R-A).
+- `[PASS]` Visitor Conduct Protocol verified (rude, security probe, prompt injection boundaries).
+- `[PASS]` Multi-Repository Comparison verified (`BrandForge` vs `InkLoom` architectural breakdown).
+- `[PASS]` Repository Context Resolution verified (ambiguous request prompts target, active repo resolves).
+
+---
+
+## 5. V.E.R.A. Upgrade: JARVIS-Style Always-On Voice & Personality Engine
+
+### Key Features Implemented:
+1. **Always-On Wake-Word Subsystem (`VeraVoiceEngine`)**:
+   - Managed non-blocking recognition loop listening for wake phrases: `Vera`, `Hey Vera`, `Okay Vera`, `Hi Vera`, `Vira`.
+   - Explicit 15-state machine: `disabled`, `requesting_permission`, `initializing`, `standby`, `wake_detected`, `acknowledging`, `capturing_command`, `transcribing`, `processing`, `speaking`, `paused`, `recovering`, `permission_denied`, `unsupported`, `error`.
+   - Bounded exponential backoff restart mechanism on silence or service dropouts.
+   - Acoustic feedback loop protection: Cleanly aborts recognition before speech synthesis playback, then resumes standby listening with a debounced post-speech cooldown.
+2. **Vera Identity & Pronunciation Rules**:
+   - Vera introduces herself and refers to herself strictly as **Vera** (pronounced *VEER-uh*).
+   - In both text dialogue and spoken output, letter-by-letter acrostic spelling ("V-E-R-A" or "V dot E dot R dot A") is strictly prevented across backend prompts, assistant sanitizers, and frontend UI templates.
+3. **Operator Respect & Visitor Protocols**:
+   - **Operator (`prathmeshmante-glitch`)**: Addressed respectfully as **Boss** (e.g., *"Yes, Boss?"*, *"The comparison is ready, Boss"*).
+   - **Visitor Conduct Protocol**: Calm, professional boundary enforcement for impolite remarks, harassment, credential probing, or prompt injections.
+4. **Natural Language Command Router**:
+   - Deterministic local routing for immediate operations: stopping speech (*"Stop talking"*), pausing/resuming listening, help, and name queries.
+   - Grounded multi-repository comparisons (*"Compare BrandForge and InkLoom"*).
+   - Active repository context awareness (*"Explain this repository"*, *"What technologies does it use?"*).
+5. **Always-Listening HUD Controls (System 01)**:
+   - `ENABLE ALWAYS LISTENING`, `PAUSE LISTENING`, `PUSH TO TALK`, `STOP TALKING`, and `VOICE ON`.
+   - Real-time microphone status indicator and synchronized neural orb state animations.
+
