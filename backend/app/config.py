@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Operator Config
     OPERATOR_NAME: str = "Prathmesh Mante"
     GITHUB_USERNAME: str = "prathmeshmante-glitch"
-    VERA_PASSPHRASE: str = "Prat"
+    VERA_PASSPHRASE: str = "Open the command deck"
     
     # AI Provider Config
     AI_API_KEY: Optional[str] = None
