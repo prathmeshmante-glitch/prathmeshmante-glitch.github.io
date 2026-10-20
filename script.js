@@ -11,7 +11,7 @@
   const CONFIG = {
     OPERATOR: 'Prathmesh Mante',
     GITHUB_USER: 'prathmeshmante-glitch',
-    PASSPHRASE: 'prat',
+    PASSPHRASE: 'open the command deck',
     BACKEND_URL: (window.VERA_BACKEND_URL) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : ''),
     FALLBACK_REPOS: [
       {
@@ -258,7 +258,7 @@
           setSystemVoiceState('listening');
           sfx.playChime('listen_start');
           if (purpose === 'auth') {
-            updateAuthStatus('LISTENING FOR PASSPHRASE… SAY “PRAT”', 'listening');
+            updateAuthStatus('LISTENING FOR PASSPHRASE… SAY “OPEN THE COMMAND DECK”', 'listening');
           } else {
             $('chatHeadline').textContent = 'V.E.R.A. is listening to your command…';
           }
@@ -266,9 +266,18 @@
 
         this.recognition.onresult = (event) => {
           if (!event.results || !event.results[0]) return;
-          const transcript = event.results[0][0].transcript.trim();
+          const result = event.results[0];
+          const alternatives = [];
+          for (let i = 0; i < result.length; i++) {
+            const candidate = (result[i].transcript || '').trim();
+            if (candidate) alternatives.push(candidate);
+          }
+          // Prefer a recognized authorization phrase from any browser alternative.
+          const transcript = purpose === 'auth'
+            ? (alternatives.find(verifyPassphrase) || alternatives[0] || '')
+            : (alternatives[0] || '');
           setSystemVoiceState('transcribing');
-          
+
           if (purpose === 'auth') {
             handleAuthResult(transcript);
           } else {
@@ -363,14 +372,18 @@
 
   function verifyPassphrase(input) {
     const clean = normalizePassphrase(input);
-    // Accepted variations for Indian English accents & speech recognition variations
-    const accepted = [
-      'prat', 'pratt', 'prath', 'prathmesh', 'prathmante', 'prat mesh',
-      'brad', 'brat', 'prod', 'part', 'p r a t', 'password prat',
-      'the password is prat', 'passphrase prat', 'enter prat', 'unlock prat',
-      'hey vera prat', 'vera prat'
-    ];
-    return accepted.includes(clean) || clean.includes('prat') || clean.includes('prath');
+    if (!clean) return false;
+
+    // Spoken demo phrase: "Open the command deck".
+    // Match key words instead of requiring a brittle exact transcript.
+    const hasCommand = /\b(?:command|commander)\b/.test(clean);
+    const hasDeck = /\b(?:deck|desk)\b/.test(clean);
+    const hasWakeVerb = /\b(?:open|unlock|activate)\b/.test(clean);
+    const mentionsVera = /\bvera\b/.test(clean);
+
+    // "command deck" is accepted as a short fallback if recognition drops "open".
+    return hasCommand && hasDeck &&
+      (hasWakeVerb || mentionsVera || clean.split(' ').filter(Boolean).length <= 3);
   }
 
   function handleAuthResult(transcript) {
@@ -404,11 +417,11 @@
     } else {
       sfx.playChime('auth_error');
       $('welcomeTitle').textContent = 'AUTHORIZATION FAILED';
-      $('authErrorMsg').textContent = `I captured: “${transcript}”. Passphrase did not match. Say “Prat” clearly to enter.`;
+      $('authErrorMsg').textContent = `I captured: “\${transcript}”. Say “Open the command deck” clearly, or just “command deck”, and try again.`;
       updateAuthStatus('AUTHENTICATION REJECTED · RETRY READY', 'error');
       $('retryVoiceBtn').hidden = false;
       $('beginVoiceBtnText').textContent = 'RETRY VOICE AUTHORIZATION ↗';
-      speechEngine.speak('Passphrase not recognized. Please say Prat clearly to unlock the command deck.');
+      speechEngine.speak('Passphrase not recognized. Please say: Open the command deck.');
     }
   }
 
