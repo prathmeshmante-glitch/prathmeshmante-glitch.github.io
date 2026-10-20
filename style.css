@@ -29,3 +29,5 @@ body:not(.authorized) .sidebar,body:not(.authorized) .hero,body:not(.authorized)
 .voice-actions{margin-top:10px}
 .voice-actions .btn{min-height:40px}
 @media(max-width:600px){.welcome-card{padding:25px 20px}.welcome-card h2{font-size:33px}.public-link{line-height:1.8}}
+
+body:not(.authorized){overflow:hidden}
