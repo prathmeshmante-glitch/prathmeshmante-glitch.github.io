@@ -13,7 +13,7 @@
 
 Rather than serving as an inert static portfolio or an artificial chatbot, V.E.R.A. provides:
 - **Cinematic Command Deck**: A dark obsidian, reactor gold, and telemetry cyan HUD featuring concentric 3D rotating rings, responsive audio waveforms, and interactive system diagnostics.
-- **Voice-First Passphrase Gate**: Ceremonial voice authorization handshake requiring the operator passphrase (`Prat`) with phonetic tolerance and graceful recovery.
+- **Voice-First Passphrase Gate**: Ceremonial voice authorization handshake requiring the spoken command phrase (`Open the command deck`) with phonetic tolerance and graceful recovery.
 - **Live GitHub Intelligence**: Discovers real public repositories (`brandforge`, `inkloom`, `prathmeshmante-glitch.github.io`), extracts live README documentation, parses dependency manifests (`package.json`, `requirements.txt`), and generates architectural topographies.
 - **Dual-Mode AI Architecture**: Operates with a private Python FastAPI backend supporting open-ended LLM reasoning (OpenAI, Gemini, OpenRouter), while gracefully falling back to a deterministic **Honest Degraded Mode** on static GitHub Pages when no API credentials are present.
 
@@ -67,7 +67,7 @@ The interface is organized into 9 coordinated functional systems:
 ### Engineering Fixes Implemented:
 - **Explicit State Machine**: Implemented `idle` ➔ `initializing` ➔ `listening` ➔ `transcribing` ➔ `thinking` ➔ `speaking` with synchronized UI indicators and clean error states.
 - **Audio Collision Prevention**: Calls `speechSynthesis.cancel()` prior to any recognition start, and disables microphone capture during speech output.
-- **Phonetic & Punctuation Normalization**: Sanitizes input by stripping punctuation and matching against phonetic variations for the demonstration passphrase (`Prat`).
+- **Phrase-based Recognition**: Recognizes “Open the command deck” using key words and available alternate speech transcripts, reducing failures caused by brittle exact matching.
 - **Resilient Recovery**: Added an explicit retry mechanism without page reloads, actionable permission guidance, and a direct link to public GitHub repositories so no user is ever locked out.
 
 ---
@@ -118,7 +118,7 @@ Open your browser at `http://127.0.0.1:5500/index.html`.
 | `GITHUB_TOKEN` | Optional GitHub Personal Access Token (raises rate limit from 60 to 5000 req/hr) | `None` |
 | `OPERATOR_NAME` | Name of the system operator | `Prathmesh Mante` |
 | `GITHUB_USERNAME` | Target GitHub user for public reconnaissance | `prathmeshmante-glitch` |
-| `VERA_PASSPHRASE` | Demonstration voice gate passphrase | `Prat` |
+| `VERA_PASSPHRASE` | Demonstration voice gate phrase | `Open the command deck` |
 | `PORT` | Backend server port | `8000` |
 | `FRONTEND_ORIGIN`| Allowed CORS origin | `*` |
 
